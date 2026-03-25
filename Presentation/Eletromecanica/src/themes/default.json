@@ -1,0 +1,40 @@
+{
+  "light": {
+    "dark": false,
+    "colors": {
+      "background": "#FFFFFF",
+      "surface": "#F5F5F5",
+      "on-background": "#000000",
+      "on-surface": "#000000",
+      "primary": "#3366FF",
+      "secondary": "#000033",
+      "accent": "#f58220",
+      "error": "#e53935",
+      "info": "#1e88e5",
+      "success": "#43a047",
+      "warning": "#fb8c00",
+      "close": "#000000",
+      "neutral": "#7A7A7A",
+      "menu": "#455560"
+    }
+  },
+  "dark": {
+    "dark": true,
+    "colors": {
+      "background": "#121212",
+      "surface": "#1E1E1E",
+      "on-background": "#FFFFFF",
+      "on-surface": "#FFFFFF",
+      "primary": "#202040",
+      "secondary": "#121212",
+      "accent": "#FF8C00",
+      "error": "#CF6679",
+      "info": "#2196F3",
+      "success": "#4CAF50",
+      "warning": "#FB8C00",
+      "close": "#ffffff",
+      "neutral": "#7A7A7A",
+      "menu": "#FAFAFA"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="Dapper" Version="2.1.66" />
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.11" />
+	  <PackageReference Include="Refit" Version="10.0.1" />
+	  <PackageReference Include="Refit.HttpClientFactory" Version="10.0.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Core.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Using Include="Core.Interfaces.Repositories" />
+		<Using Include="Core.Interfaces" />
+		<Using Include="Core.Models.DocumentAggregate" />
+		<Using Include="Core.Models.Enums" />
+		<Using Include="Core.Models.EquipmentAggregate" />
+		<Using Include="Core.Models.GoogleMapAggregate" />
+		<Using Include="Core.Models.OrdemServicoAggregate" />
+		<Using Include="Core.Models.PaginateAggregate.Filters" />
+		<Using Include="Core.Models.PaginateAggregate" />
+		<Using Include="Core.Models" />
+		<Using Include="Core.Utils" />
+		<Using Include="Dapper" />
+		<Using Include="Data.Clients" />
+		<Using Include="Data.Interfaces" />
+		<Using Include="Data.Repositories" />
+		<Using Include="Data.Utils" />
+		<Using Include="Microsoft.Data.SqlClient" />
+		<Using Include="Microsoft.Extensions.Configuration" />
+		<Using Include="Microsoft.Extensions.DependencyInjection" />
+		<Using Include="Refit" />
+		<Using Include="System.Data.Common" />
+		<Using Include="System.Data" />
+		<Using Include="System.Text" />
+	</ItemGroup>
+</Project>

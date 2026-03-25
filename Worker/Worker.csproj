@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+  	<PackageReference Include="Cronos" Version="0.11.1" />
+  	<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+	<PackageReference Include="NLog" Version="4.7.13" />
+	<PackageReference Include="NLog.Web.AspNetCore" Version="4.14.0" />
+	<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+  	<Using Include="Data.Interfaces" />
+	<Using Include="Business.Interfaces" />
+	<Using Include="Core.Models.Enums" />
+	<Using Include="Core.Models.EquipmentAggregate" />
+	<Using Include="Core.Models.OrdemServicoAggregate" />
+	<Using Include="Data.Utils" />
+	<Using Include="Core.Utils" />
+	<Using Include="System.Data.Common" />
+	<Using Include="Cronos" />
+	<Using Include="Microsoft.Extensions.Options" />
+	<Using Include="Worker.Options" />
+	<Using Include="Worker.Services" />
+	<Using Include="Data.Extensions" />
+	<Using Include="Worker.Workers" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\Business\Business.csproj" />
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+</Project>

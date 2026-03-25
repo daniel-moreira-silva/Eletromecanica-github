@@ -1,0 +1,10 @@
+﻿namespace Core.Models.GoogleMapAggregate;
+
+public class Southwest
+{
+    [JsonPropertyName("lat")]
+    public double Lat { get; set; }
+
+    [JsonPropertyName("lng")]
+    public double Lng { get; set; }
+}

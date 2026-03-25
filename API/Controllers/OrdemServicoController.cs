@@ -1,0 +1,104 @@
+﻿namespace API.Controllers;
+
+[ApiController]
+[Route("ordem-servico")]
+public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemServicoService service) : BaseController(logger)
+{
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] OrdemServico ordemServico, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.AddAsync(ordemServico, cancellationToken);
+
+            if (result is not null)
+                return Ok(new SuccessMessage("Cadastro efetuado com sucesso.", result));
+            else
+                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao adicionar ordem de serviço"));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao adicionar registro.");
+            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateAsync([FromBody] OrdemServico ordemServico, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.UpdateAsync(ordemServico, cancellationToken);
+
+            if (result)
+                return Ok(new SuccessMessage("Edição efetuada com sucesso."));
+            else
+                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao atualizar ordem de serviço"));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao atualizar registro.");
+            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpPost("lista")]
+    public async Task<IActionResult> PaginatedGetAsync([FromBody] OrdemServicoFilter filter, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.PaginatedGetAsync(filter, cancellationToken);
+            return Ok(new SuccessMessage("Lista retornada com sucesso.", result));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao buscar lista.");
+            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpGet("buscar-por-endereco")]
+    public async Task<IActionResult> GetByAddressAsync([FromQuery] string search, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.GetByAddressAsync(search, cancellationToken);
+            return Ok(new SuccessMessage("Lista retornada com sucesso.", result));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao buscar lista.");
+            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpGet("buscar-orderns-servico-proximas")]
+    public async Task<IActionResult> GetOrdemServicoNearByAsync([FromQuery] string lat, [FromQuery] string lon, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.GetOrdemServicoNearByAsync(lat, lon, cancellationToken);
+            return Ok(new SuccessMessage("Lista retornada com sucesso.", result));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao buscar lista.");
+            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> BuscarOcorrenciaPorId([FromQuery] Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.GetByIdAsync(id, cancellationToken);
+            return Ok(new SuccessMessage("Ordem de serviço obtida com sucesso.", result));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao buscar ordem de serviço.");
+            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+}

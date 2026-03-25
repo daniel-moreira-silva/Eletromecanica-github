@@ -1,0 +1,116 @@
+:root {
+  /* Tipografia unificada */
+  --app-label-font-size: 13px;
+  --app-label-font-weight: 500;
+  --app-input-font-size: 13px;
+  --app-input-font-weight: 500;
+  --app-card-title-font-size: 16px;
+  --app-card-title-font-weight: 500;
+  --app-p-font-size: 14px;
+}
+
+/* Inputs (v-text-field, v-textarea e inputs nativos) */
+.v-field__input,
+.v-text-field input,
+.v-textarea textarea,
+.v-input__slot input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  font-size: var(--app-input-font-size) !important;
+  font-weight: var(--app-input-font-weight) !important;
+}
+
+p {
+  font-size: var(--app-p-font-size);
+}
+
+/* Labels de campo e legendas genéricas */
+.v-field__label,
+label,
+.v-label {
+  font-size: var(--app-label-font-size) !important;
+  font-weight: var(--app-label-font-weight) !important;
+}
+
+/* Títulos de card */
+.v-card__title {
+  font-size: var(--app-card-title-font-size) !important;
+  font-weight: var(--app-card-title-font-weight) !important;
+}
+
+/* Texto de botões */
+.v-btn .v-btn__content {
+  font-size: var(--app-label-font-size) !important;
+  font-weight: var(--app-label-font-weight) !important;
+}
+
+/* Texto de abas */
+.v-tab {
+  font-size: var(--app-label-font-size) !important;
+  font-weight: var(--app-label-font-weight) !important;
+}
+
+/* Utilitários gerais */
+.container-modal {
+  height: 100% !important;
+}
+
+.grid-component {
+  height: calc(100vh - 150px);
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.text-base-button {
+  font-size: 14px !important;
+  padding: 0 10px;
+}
+
+.v-btn {
+  text-transform: none;
+}
+
+.form-dialog {
+  width: 50%;
+}
+
+.icon-clicavel {
+  cursor: pointer;
+}
+
+input[type="date"] {
+  display: inline;
+}
+
+input[type="datetime-local"] {
+  display: inline;
+}
+
+input[type="time"] {
+  display: inline;
+}
+
+@media (max-width: 530px) {
+  .form-dialog {
+    width: 100%;
+  }
+}
+
+@media (min-width: 531px) and (max-width: 768px) {
+  .form-dialog {
+    width: 70%;
+  }
+}
