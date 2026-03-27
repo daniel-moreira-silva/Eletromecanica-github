@@ -5,7 +5,7 @@ public class RegraPreventivaService(IRegraPreventivaRepository repository, ILogg
     public async Task<Guid?> AddAsync(RegraPreventiva regra, CancellationToken cancellationToken)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
-        using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         try
         {
@@ -34,7 +34,7 @@ public class RegraPreventivaService(IRegraPreventivaRepository repository, ILogg
     public async Task<bool> UpdateAsync(RegraPreventiva regra, CancellationToken cancellationToken)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
-        using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         try
         {

@@ -17,12 +17,12 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
             if (result != Guid.Empty)
                 return Ok(new SuccessMessage("Cadastro efetuado com sucesso.", estacao));
             else
-                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao adicionar estação"));
+                return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao adicionar estação"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao adicionar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -38,12 +38,12 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
             if (result)
                 return Ok(new SuccessMessage("Edição efetuada com sucesso.", estacao));
 
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao atualizar estação"));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao atualizar estação"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar estação.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -62,7 +62,7 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -81,7 +81,7 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -100,7 +100,7 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar tipos de estação.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -119,7 +119,7 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar status.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -134,7 +134,7 @@ public class EstacaoController(ILogger<EstacaoController> logger, IEstacaoServic
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar estações.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 }

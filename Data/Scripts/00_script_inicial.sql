@@ -544,7 +544,8 @@ CREATE TABLE dbo.OrdemServico (
     DataParalisacao DATETIME2 NULL,
     DataSolicitacao DATETIME2 NOT NULL CONSTRAINT DF_OrdemServico_DataSolicitacao DEFAULT SYSDATETIME(),
     DataInicioExecucao DATETIME2 NULL,
-
+    DataPrevista DATETIME2 NULL,   -- prazo de conclusão da OS
+    CustoTotal DECIMAL(18, 2) NULL,   -- custo acumulado da OS
     Observacao NVARCHAR(MAX) NULL,
 
     -- (Opcional) controle lógico
@@ -577,6 +578,7 @@ GO
 CREATE INDEX IX_OrdemServico_Status_Data ON dbo.OrdemServico (StatusId, DataSolicitacao DESC);
 CREATE INDEX IX_OrdemServico_Estacao_Data ON dbo.OrdemServico (EstacaoId, DataSolicitacao DESC);
 CREATE INDEX IX_OrdemServico_Ano ON dbo.OrdemServico (Ano);
+CREATE INDEX IX_OrdemServico_DataPrevista ON dbo.OrdemServico (DataPrevista) WHERE DataPrevista IS NOT NULL;
 GO
 
 /* -----------------------------

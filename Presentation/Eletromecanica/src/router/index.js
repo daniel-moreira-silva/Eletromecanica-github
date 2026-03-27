@@ -6,7 +6,7 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/Home.vue')
+    component: () => import('@/views/relatorios/Dashboard.vue')
   },
   {
     path: '/acesso-negado',
@@ -59,6 +59,11 @@ const routes = [
     component: () => import('@/views/DetalharOrdemServico.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/relatorios/Dashboard.vue')
+  }
 ]
 
 const router = createRouter({

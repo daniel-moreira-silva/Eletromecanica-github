@@ -1,7 +1,4 @@
-﻿using Business.Extensions;
-using NLog.Extensions.Logging;
-
-var builder = Host.CreateApplicationBuilder(args);
+﻿var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<SchedulerOptions>(
     builder.Configuration.GetSection("Scheduler"));

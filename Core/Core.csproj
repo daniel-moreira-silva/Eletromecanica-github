@@ -8,10 +8,10 @@
 	  <Folder Include="Interfaces\Services\" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Compile Update="Constants\ConstantResources.Designer.cs">
+	  <Compile Update="Constants\Constantes.Designer.cs">
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>
-	    <DependentUpon>ConstantResources.resx</DependentUpon>
+	    <DependentUpon>Constantes.resx</DependentUpon>
 	  </Compile>
 	  <Compile Update="Constants\Resource1.Designer.cs">
 	    <DesignTime>True</DesignTime>
@@ -20,9 +20,9 @@
 	  </Compile>
 	</ItemGroup>
 	<ItemGroup>
-	  <EmbeddedResource Update="Constants\ConstantResources.resx">
+	  <EmbeddedResource Update="Constants\Constantes.resx">
 	    <Generator>PublicResXFileCodeGenerator</Generator>
-	    <LastGenOutput>ConstantResources.Designer.cs</LastGenOutput>
+	    <LastGenOutput>Constantes.Designer.cs</LastGenOutput>
 	  </EmbeddedResource>
 	  <EmbeddedResource Update="Constants\Resource1.resx">
 	    <Generator>ResXFileCodeGenerator</Generator>
@@ -32,6 +32,7 @@
 	<ItemGroup>
 		<Using Include="Core.Models.Enums" />
 		<Using Include="Core.Models.PaginateAggregate" />
+		<Using Include="Core.Models.DashboardAggregate" />
 		<Using Include="System.ComponentModel" />
 		<Using Include="System.Data" />
 		<Using Include="System.Reflection" />

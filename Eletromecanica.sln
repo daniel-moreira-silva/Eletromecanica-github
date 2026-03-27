@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11415.280 d18.0
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{C671AF9C-E459-458F-AC96-591E6D99FA03}"
 EndProject
@@ -69,7 +69,6 @@ Global
 		{2F8344BE-F830-4B01-BEA5-5FE439B27B18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F8344BE-F830-4B01-BEA5-5FE439B27B18}.Release|Any CPU.Build.0 = Release|Any CPU
 		{77B84CA3-43DE-BBA4-C9BF-BF501A5A58BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{77B84CA3-43DE-BBA4-C9BF-BF501A5A58BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77B84CA3-43DE-BBA4-C9BF-BF501A5A58BB}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{77B84CA3-43DE-BBA4-C9BF-BF501A5A58BB}.Release|Any CPU.Build.0 = Debug|Any CPU
 		{F75BB086-6157-4CAE-8D49-4CECA7329487}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

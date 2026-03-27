@@ -183,7 +183,9 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
 
     public async Task<IEnumerable<OrdemServicoServicoSolicitado>> GetAllByOrdensServicoIdsAsync(List<Guid> ordensServicoIds, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
-        if (ordensServicoIds is null || !ordensServicoIds.Any())
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        if (ordensServicoIds is null || ordensServicoIds.Count == 0)
             return [];
 
         const string sql = @"

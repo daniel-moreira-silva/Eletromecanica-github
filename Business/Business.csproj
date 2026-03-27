@@ -27,6 +27,7 @@
 		<Using Include="Core.Models.OrdemServicoAggregate" />
 		<Using Include="Core.Models.PaginateAggregate.Filters" />
 		<Using Include="Core.Models.PaginateAggregate" />
+		<Using Include="Core.Models.DashboardAggregate" />
 		<Using Include="Core.Models" />
 		<Using Include="Data.Extensions" />
 		<Using Include="Data.Interfaces" />

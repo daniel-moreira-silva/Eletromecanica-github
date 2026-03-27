@@ -40,7 +40,7 @@ public class OrdemServicoService(DbConnection connection,
     {
         var numeroOs = await repository.GetNextNumberOSAynsc(transaction, cancellationToken);
         ordemServico.DataSolicitacao = DateTime.Now;
-        ordemServico.StatusId = Guid.Parse(ConstantResources.StatusOrdemServicoSolicitada);
+        ordemServico.StatusId = Guid.Parse(Constantes.OrdemServicoStatusSolicitada);
         ordemServico.Numero = numeroOs;
         ordemServico.Ano = DateTime.UtcNow.Year;
         ordemServico.SubOS = 0;

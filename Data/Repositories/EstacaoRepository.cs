@@ -103,15 +103,15 @@ public class EstacaoRepository(DbConnection connection) : IEstacaoRepository
         {
             builder.Where(@"
                 (
-                    UPPER(E.NOME) LIKE '%' || @TODOS || '%'
-                    OR TE.NOME LIKE '%' || @TODOS || '%'
-                    OR E.LOCALIZACAO LIKE '%' || @TODOS || '%'
+                    UPPER(E.NOME) LIKE '%' + @TODOS + '%'
+                    OR TE.NOME LIKE '%' + @TODOS + '%'
+                    OR E.LOCALIZACAO LIKE '%' + @TODOS + '%'
                 )",
                 "@TODOS", filter.Todos.Trim().ToUpper());
         }
 
         if (!string.IsNullOrWhiteSpace(filter.Nome))
-            builder.Where("UPPER(E.NOME) LIKE '%' || @NOME || '%'",
+            builder.Where("UPPER(E.NOME) LIKE '%' + @NOME + '%'",
                           "@NOME", filter.Nome.ToUpper());
 
         if (!string.IsNullOrWhiteSpace(filter.TipoEstacaoId))
@@ -119,7 +119,7 @@ public class EstacaoRepository(DbConnection connection) : IEstacaoRepository
                           "@TIPOESTACAOID", filter.TipoEstacaoId);
 
         if (!string.IsNullOrWhiteSpace(filter.Localizacao))
-            builder.Where("UPPER(E.LOCALIZACAO) LIKE '%' || @LOCALIZACAO || '%'",
+            builder.Where("UPPER(E.LOCALIZACAO) LIKE '%' + @LOCALIZACAO + '%'",
                           "@LOCALIZACAO", filter.Localizacao.ToUpper());
 
         if (filter.Ativo.HasValue)

@@ -14,7 +14,7 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
                 EquipamentoId,
                 Nome,
                 UnidadePeriodo,
-                StatusRegraPreventiva,
+                Status,
                 Intervalo,
                 DataInicio,
                 ProximoProcessamento,
@@ -28,7 +28,7 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
                 @EquipamentoId,
                 @Nome,
                 @UnidadePeriodo,
-                @StatusRegraPreventiva,
+                @Status,
                 @Intervalo,
                 @DataInicio,
                 @ProximoProcessamento,
@@ -72,8 +72,8 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
 
         const string sql = @"
             UPDATE RegraPreventiva
-            SET StatusRegraPreventiva = 1
-            WHERE Id = @RegraId AND StatusRegraPreventiva = 0
+            SET Status = 1
+            WHERE Id = @RegraId AND Status = 0
         ";
 
         var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { RegraId = regraId }, transaction, cancellationToken: cancellationToken));
@@ -87,8 +87,8 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
 
         const string sql = @"
             UPDATE RegraPreventiva
-            SET StatusRegraPreventiva = 0
-            WHERE Id = @RegraId AND StatusRegraPreventiva = 1
+            SET Status = 0
+            WHERE Id = @RegraId AND Status = 1
         ";
 
         var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { RegraId = regraId }, transaction, cancellationToken: cancellationToken));
@@ -143,8 +143,8 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
-        if (!servicosSolicitadosIds.Any())
-            return true;
+        var ids = servicosSolicitadosIds.ToList();
+        if (ids.Count == 0) return true;
 
         const string sql = @"
             INSERT INTO dbo.RegraPreventivaServicoSolicitado
@@ -159,7 +159,7 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
             );
         ";
 
-        var parametros = servicosSolicitadosIds.Select(servicoId => new
+        var parametros = ids.Select(servicoId => new
         {
             RegraPreventivaId = regraPreventivaId,
             ServicoSolicitadoId = servicoId
@@ -212,7 +212,7 @@ public class RegraPreventivaRepository(DbConnection connection) : IRegraPreventi
         string sql = @"
             SELECT *
             FROM RegraPreventiva
-            WHERE Ativo = 1 AND CAST(ProximoProcessamento AS date) <= CAST(@Today AS date) AND StatusRegraPreventiva = 0
+            WHERE Ativo = 1 AND CAST(ProximoProcessamento AS date) <= CAST(@Today AS date) AND Status = 0
         ";
 
         var result = await connection.QueryAsync<RegraPreventiva>(new CommandDefinition(sql, new { Today = DateTime.UtcNow.Date }, transaction, cancellationToken: cancellationToken));

@@ -16,6 +16,7 @@
 		<ProjectReference Include="..\Core\Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+		<Using Include="Core.Constants" />
 		<Using Include="Core.Interfaces.Repositories" />
 		<Using Include="Core.Interfaces" />
 		<Using Include="Core.Models.DocumentAggregate" />
@@ -25,6 +26,7 @@
 		<Using Include="Core.Models.OrdemServicoAggregate" />
 		<Using Include="Core.Models.PaginateAggregate.Filters" />
 		<Using Include="Core.Models.PaginateAggregate" />
+		<Using Include="Core.Models.DashboardAggregate" />
 		<Using Include="Core.Models" />
 		<Using Include="Core.Utils" />
 		<Using Include="Dapper" />

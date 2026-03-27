@@ -17,12 +17,12 @@ public class ServicoSolicitadoController(ILogger<ServicoSolicitadoController> lo
             if (result != Guid.Empty)
                 return Ok(new SuccessMessage("Cadastro efetuado com sucesso.", servicoSolicitado));
 
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao adicionar serviço solicitado"));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao adicionar serviço solicitado"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao adicionar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -38,12 +38,12 @@ public class ServicoSolicitadoController(ILogger<ServicoSolicitadoController> lo
             if (result)
                 return Ok(new SuccessMessage("Edição efetuada com sucesso.", servicoSolicitado));
 
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao atualizar serviço solicitado"));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao atualizar serviço solicitado"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar serviço solicitado.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -62,7 +62,7 @@ public class ServicoSolicitadoController(ILogger<ServicoSolicitadoController> lo
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -81,7 +81,7 @@ public class ServicoSolicitadoController(ILogger<ServicoSolicitadoController> lo
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -100,7 +100,7 @@ public class ServicoSolicitadoController(ILogger<ServicoSolicitadoController> lo
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar status.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -115,7 +115,7 @@ public class ServicoSolicitadoController(ILogger<ServicoSolicitadoController> lo
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar estações.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 }

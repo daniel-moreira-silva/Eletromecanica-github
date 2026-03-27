@@ -20,6 +20,7 @@ public static class ServiceExtension
         services.AddScoped<IGoogleMapRepository, GoogleMapRepository>();
         services.AddScoped<IOrdemServicoRepository, OrdemServicoRepository>();
         services.AddScoped<IRegraPreventivaRepository, RegraPreventivaRepository>();
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
 
         services.AddRefitClient<IGoogleMapClient>()
             .ConfigureHttpClient(client =>

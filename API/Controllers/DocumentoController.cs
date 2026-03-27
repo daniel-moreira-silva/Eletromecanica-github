@@ -15,7 +15,7 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao obter documentos");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO, ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, ex.Message));
         }
     }
 
@@ -97,12 +97,12 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
             if (result)
                 return Ok(new SuccessMessage("Documento atualizado com sucesso.", null));
             else
-                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO, "Erro ao atualizar documento."));
+                return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, "Erro ao atualizar documento."));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar documento.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO, ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, ex.Message));
         }
     }
 
@@ -116,12 +116,12 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
             if (result)
                 return Ok(new SuccessMessage("Documento excluído com sucesso.", null));
             else
-                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO, "Erro ao excluir documento."));
+                return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, "Erro ao excluir documento."));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao excluir documento.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO, ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, ex.Message));
         }
     }
 

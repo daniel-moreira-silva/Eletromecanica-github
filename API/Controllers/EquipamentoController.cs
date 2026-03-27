@@ -14,12 +14,12 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
             if (result != Guid.Empty)
                 return Ok(new SuccessMessage("Cadastro efetuado com sucesso.", equipamento));
 
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao adicionar equipamento"));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao adicionar equipamento"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao adicionar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -32,12 +32,12 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
             if (result)
                 return Ok(new SuccessMessage("Edição efetuada com sucesso.", equipamento));
 
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao atualizar equipamento"));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao atualizar equipamento"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar equipamento.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -56,7 +56,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -75,7 +75,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -94,7 +94,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar registros.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -113,7 +113,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar tipos de equipamento.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -132,7 +132,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar status.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -147,7 +147,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar estações.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -165,7 +165,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar regras preventivas.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -187,7 +187,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao cadastrar regra preventiva.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -209,7 +209,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar regra preventiva.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -231,7 +231,7 @@ public class EquipamentoController(IEquipamentoService service, ILogger<Equipame
         catch (Exception ex)
         {
             LogError(ex, "Erro ao deletar regra preventiva.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 }

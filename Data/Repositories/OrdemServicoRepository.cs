@@ -31,6 +31,8 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 DataFinalizacao,
                 DataParalisacao,
                 DataInicioExecucao,
+                DataPrevista,
+                CustoTotal,
                 Observacao
             )
             OUTPUT INSERTED.Id
@@ -58,6 +60,8 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 @DataFinalizacao,
                 @DataParalisacao,
                 @DataInicioExecucao,
+                @DataPrevista,
+                @CustoTotal,
                 @Observacao
             );
         ";
@@ -95,6 +99,8 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 DataParalisacao = @DataParalisacao,
                 DataSolicitacao = @DataSolicitacao,
                 DataInicioExecucao = @DataInicioExecucao,
+                DataPrevista = @DataPrevista,
+                CustoTotal = @CustoTotal,
                 Observacao = @Observacao
             WHERE Id = @Id;
         ";
@@ -163,9 +169,9 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         {
             builder.Where(@"
                 (
-                    UPPER(OS.CODIGO) LIKE '%' || @TODOS || '%'
-                    OR CAST(OS.NUMERO AS VARCHAR(50)) LIKE '%' || @TODOS || '%'
-                    OR CAST(OS.DATASOLICITACAO AS VARCHAR(50)) LIKE '%' || @TODOS || '%'
+                    UPPER(OS.CODIGO) LIKE '%' + @TODOS + '%'
+                    OR CAST(OS.NUMERO AS VARCHAR(50)) LIKE '%' + @TODOS + '%'
+                    OR CAST(OS.DATASOLICITACAO AS VARCHAR(50)) LIKE '%' + @TODOS + '%'
                 )",
                 "@TODOS", filter.Todos.Trim().ToUpper());
         }

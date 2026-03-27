@@ -15,7 +15,7 @@ public class GoogleMapController(ILogger<GoogleMapController> logger, IGoogleMap
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar endereço.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 }

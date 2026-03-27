@@ -29,6 +29,8 @@
 	<Using Include="Worker.Services" />
 	<Using Include="Data.Extensions" />
 	<Using Include="Worker.Workers" />
+	<Using Include="Business.Extensions" />
+	<Using Include="NLog.Extensions.Logging" />
   </ItemGroup>
 	
   <ItemGroup>

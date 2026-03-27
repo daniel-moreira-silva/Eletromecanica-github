@@ -30,6 +30,8 @@ public class OrdemServico
     public DateTime? DataParalisacao { get; set; }
     public DateTime DataSolicitacao { get; set; }
     public DateTime? DataInicioExecucao { get; set; }
+    public DateTime? DataPrevista { get; set; }   // prazo de conclusão
+    public decimal? CustoTotal { get; set; }   // custo acumulado
     public string? Observacao { get; set; }
     public bool IsAgendada { get; set; }
     public List<OrdemServicoServicoSolicitado>? ServicosSolicitados { get; set; }

@@ -14,6 +14,7 @@ public static class ServiceExtensions
         services.AddScoped<IGoogleMapService, GoogleMapService>();
         services.AddScoped<IOrdemServicoService, OrdemServicoService>();
         services.AddScoped<IRegraPreventivaService, RegraPreventivaService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }

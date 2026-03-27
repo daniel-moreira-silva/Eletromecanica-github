@@ -14,12 +14,12 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
             if (result is not null)
                 return Ok(new SuccessMessage("Cadastro efetuado com sucesso.", result));
             else
-                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao adicionar ordem de serviço"));
+                return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao adicionar ordem de serviço"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao adicionar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -33,12 +33,12 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
             if (result)
                 return Ok(new SuccessMessage("Edição efetuada com sucesso."));
             else
-                return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + "Erro ao atualizar ordem de serviço"));
+                return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + "Erro ao atualizar ordem de serviço"));
         }
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar registro.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -53,7 +53,7 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar lista.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -68,7 +68,7 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar lista.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -83,7 +83,7 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar lista.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 
@@ -98,7 +98,7 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         catch (Exception ex)
         {
             LogError(ex, "Erro ao buscar ordem de serviço.");
-            return BadRequest(new ErrorMessage(ConstantResources.ERRO_EXEC_METODO + ex.Message));
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
 }
