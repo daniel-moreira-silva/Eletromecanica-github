@@ -24,22 +24,24 @@ public class DashboardController(
         }
     }
 
-    [HttpGet("indicadores")]
-    public async Task<IActionResult> ObterIndicadores(
+    [HttpGet("mttr")]
+    public async Task<IActionResult> ObterMttr(
+    [FromQuery] Guid? estacaoId,
+    CancellationToken cancellationToken)
+    {
+        var resultado = await service.ObterMttrAsync(estacaoId, cancellationToken);
+        return Ok(new SuccessMessage("Indicadores MTTR retornados com sucesso.", resultado));
+    }
+
+    [HttpGet("mtbf")]
+    public async Task<IActionResult> ObterMtbf(
         [FromQuery] Guid? estacaoId,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var result = await service.ObterIndicadoresAsync(estacaoId, cancellationToken);
-            return Ok(new SuccessMessage("Indicadores retornados com sucesso.", result));
-        }
-        catch (Exception ex)
-        {
-            LogError(ex, "Erro ao obter indicadores.");
-            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
-        }
+        var resultado = await service.ObterMtbfAsync(estacaoId, cancellationToken);
+        return Ok(new SuccessMessage("Indicadores MTBF retornados com sucesso.", resultado));
     }
+
 
     [HttpGet("disponibilidade")]
     public async Task<IActionResult> ObterDisponibilidade(

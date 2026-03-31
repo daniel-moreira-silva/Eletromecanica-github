@@ -30,7 +30,8 @@ const listaEstacoes   = ref([])
 // ── Estado granular por bloco ─────────────────────────────────────────────────
 const blocos = reactive({
   statusOs:        { loading: false, dados: null, erro: false },
-  indicadores:     { loading: false, dados: null, erro: false },
+  mttr:            { loading: false, dados: null, erro: false },
+  mtbf:            { loading: false, dados: null, erro: false },
   disponibilidade: { loading: false, dados: null, erro: false },
   motivacao:       { loading: false, dados: null, erro: false },
   custos:          { loading: false, dados: null, erro: false },
@@ -60,6 +61,12 @@ function corProgressBar(valor) {
   return 'error'
 }
 
+function cardTintado(campo, valor) {
+  if (campo === 'atrasadas' && valor > 0) return true
+  if (campo === 'abertas'   && valor > 5) return true
+  return false
+}
+
 function corChipAtraso(dias) {
   if (dias >= 5) return 'error'
   if (dias >= 2) return 'warning'
@@ -82,8 +89,9 @@ async function carregarBloco(chave, fn) {
   if (result?.statusCode === 200) {
     blocos[chave].dados = result.data.data
 
-    if (chave === 'indicadores') await nextTick(() => renderizarIndicadores())
-    if (chave === 'motivacao')   await nextTick(() => renderizarMotivacao())
+    if (chave === 'mttr')      await nextTick(() => renderizarMttr())
+    if (chave === 'mtbf')      await nextTick(() => renderizarMtbf())
+    if (chave === 'motivacao') await nextTick(() => renderizarMotivacao())
   } else {
     blocos[chave].erro = true
   }
@@ -91,7 +99,8 @@ async function carregarBloco(chave, fn) {
 
 // ── Recargas individuais ──────────────────────────────────────────────────────
 function recarregarStatusOs()        { carregarBloco('statusOs',        () => dashboardService.obterStatusOs(estacaoId.value)) }
-function recarregarIndicadores()     { carregarBloco('indicadores',     () => dashboardService.obterIndicadores(estacaoId.value)) }
+function recarregarMttr()            { carregarBloco('mttr', () => dashboardService.obterMttr(estacaoId.value)) }
+function recarregarMtbf()            { carregarBloco('mtbf', () => dashboardService.obterMtbf(estacaoId.value)) }
 function recarregarDisponibilidade() { carregarBloco('disponibilidade', () => dashboardService.obterDisponibilidade(estacaoId.value)) }
 function recarregarMotivacao()       { carregarBloco('motivacao',       () => dashboardService.obterMotivacao(estacaoId.value)) }
 function recarregarCustos()          { carregarBloco('custos',          () => dashboardService.obterCustos(estacaoId.value)) }
@@ -102,7 +111,8 @@ function recarregarOsAtrasadas()     { carregarBloco('osAtrasadas',     () => da
 async function carregarTodos() {
   await Promise.all([
     carregarBloco('statusOs',        () => dashboardService.obterStatusOs(estacaoId.value)),
-    carregarBloco('indicadores',     () => dashboardService.obterIndicadores(estacaoId.value)),
+    carregarBloco('mttr',            () => dashboardService.obterMttr(estacaoId.value)),
+    carregarBloco('mtbf',            () => dashboardService.obterMtbf(estacaoId.value)),
     carregarBloco('disponibilidade', () => dashboardService.obterDisponibilidade(estacaoId.value)),
     carregarBloco('motivacao',       () => dashboardService.obterMotivacao(estacaoId.value)),
     carregarBloco('custos',          () => dashboardService.obterCustos(estacaoId.value)),
@@ -112,14 +122,7 @@ async function carregarTodos() {
 }
 
 // ── Gráficos ──────────────────────────────────────────────────────────────────
-function renderizarIndicadores() {
-  const dados = blocos.indicadores.dados
-  if (!dados || !canvasMttr.value || !canvasMtbf.value) return
-
-  chartMttr?.destroy()
-  chartMtbf?.destroy()
-
-  const opcoesBase = {
+const opcoesBase = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
@@ -129,12 +132,16 @@ function renderizarIndicadores() {
     }
   }
 
+function renderizarMttr() {
+  const dados = blocos.mttr.dados
+  if (!dados || !canvasMttr.value) return
+  if (chartMttr) chartMttr.destroy()
   chartMttr = new Chart(canvasMttr.value, {
     type: 'line',
     data: {
-      labels: dados.serieMttr.map(s => s.mes),
+      labels: dados.serie.map(s => s.mes),
       datasets: [{
-        data:                 dados.serieMttr.map(s => s.valor),
+        data:                 dados.serie.map(s => s.valor),
         borderColor:          '#43a047',
         backgroundColor:      'rgba(67,160,71,0.08)',
         tension:              0.4,
@@ -142,17 +149,22 @@ function renderizarIndicadores() {
         pointRadius:          3,
         pointBackgroundColor: '#43a047',
         borderWidth:          2,
-      }]
+      }],
     },
     options: opcoesBase
   })
+}
 
+function renderizarMtbf() {
+  const dados = blocos.mtbf.dados
+  if (!dados || !canvasMtbf.value) return
+  if (chartMtbf) chartMtbf.destroy()
   chartMtbf = new Chart(canvasMtbf.value, {
     type: 'line',
     data: {
-      labels: dados.serieMtbf.map(s => s.mes),
+      labels: dados.serie.map(s => s.mes),
       datasets: [{
-        data:                 dados.serieMtbf.map(s => s.valor),
+        data:                 dados.serie.map(s => s.valor),
         borderColor:          '#fb8c00',
         backgroundColor:      'rgba(251,140,0,0.08)',
         tension:              0.4,
@@ -160,11 +172,12 @@ function renderizarIndicadores() {
         pointRadius:          3,
         pointBackgroundColor: '#fb8c00',
         borderWidth:          2,
-      }]
+      }],
     },
     options: opcoesBase
   })
 }
+
 
 function renderizarMotivacao() {
   const dados = blocos.motivacao.dados
@@ -177,9 +190,9 @@ function renderizarMotivacao() {
     data: {
       labels: dados.serie.map(s => s.mes),
       datasets: [
-        { label: 'Corretiva',  data: dados.serie.map(s => s.corretivas),  backgroundColor: '#ef9a9a', stack: 'motivacao' },
-        { label: 'Preventiva', data: dados.serie.map(s => s.preventivas), backgroundColor: '#fb8c00', stack: 'motivacao' },
-        { label: 'Preditiva',  data: dados.serie.map(s => s.preditivas),  backgroundColor: '#43a047', stack: 'motivacao' },
+        { label: 'Corretiva',  data: dados.serie.map(s => s.corretivas),  backgroundColor: '#e53935', stack: 'motivacao' },
+        { label: 'Preventiva', data: dados.serie.map(s => s.preventivas), backgroundColor: '#1A237E', stack: 'motivacao' },
+        { label: 'Preditiva',  data: dados.serie.map(s => s.preditivas),  backgroundColor: '#00BCD4', stack: 'motivacao' },
       ]
     },
     options: {
@@ -252,15 +265,22 @@ onMounted(async () => {
     <v-row dense class="mb-4">
       <v-col
         v-for="cfg in [
-          { chave: 'statusOs', campo: 'abertas',     label: 'Abertas',      cor: 'text-error'   },
-          { chave: 'statusOs', campo: 'emAndamento', label: 'Em andamento', cor: 'text-warning' },
-          { chave: 'statusOs', campo: 'concluidas',  label: 'Concluídas',   cor: 'text-success' },
-          { chave: 'statusOs', campo: 'atrasadas',   label: 'Atrasadas',    cor: 'text-error'   },
+          { chave: 'statusOs', campo: 'abertas',     label: 'Abertas',      cor: '',   backgroundColor: '', borderColor: '' },
+          { chave: 'statusOs', campo: 'emAndamento', label: 'Em andamento', cor: 'text-warning', backgroundColor: '#faebd733', borderColor: '#fb8c0040' },
+          { chave: 'statusOs', campo: 'concluidas',  label: 'Concluídas',   cor: 'text-success', backgroundColor: '#c3f8c629', borderColor: '#52a8563b' },
+          { chave: 'statusOs', campo: 'atrasadas',   label: 'Atrasadas',    cor: 'text-error',   backgroundColor: '', borderColor: 'text-error' },
         ]"
         :key="cfg.campo"
         cols="6" md="3"
       >
-        <v-card variant="outlined" class="kpi-card">
+        <v-card
+            variant="outlined"
+            class="kpi-card"
+            :style="{ 'background-color': cfg.backgroundColor, 'border-color': cfg.borderColor }"
+            :class="{
+                'kpi-card--alerta': cardTintado(cfg.campo, blocos.statusOs.dados?.[cfg.campo] ?? 0)
+            }"
+        >
           <v-card-text class="card-body">
             <div class="d-flex justify-space-between align-center mb-1">
               <span class="kpi-label">{{ cfg.label }}</span>
@@ -301,21 +321,21 @@ onMounted(async () => {
                 <div class="kpi-label">MTTR — Tempo médio de reparo</div>
                 <div
                   class="kpi-value mt-1"
-                  v-if="!blocos.indicadores.loading && !blocos.indicadores.erro"
+                  v-if="!blocos.mttr.loading && !blocos.mttr.erro"
                 >
-                  {{ blocos.indicadores.dados?.mttrAtual ?? 0 }}h
+                  {{ blocos.mttr.dados?.atual ?? 0 }}h
                 </div>
               </div>
               <v-btn
                 icon size="x-small" variant="text"
-                :loading="blocos.indicadores.loading"
-                @click="recarregarIndicadores"
+                :loading="blocos.mttr.loading"
+                @click="recarregarMttr"
               >
                 <font-awesome-icon icon="rotate-right" style="font-size:11px" />
               </v-btn>
             </div>
 
-            <v-skeleton-loader v-if="blocos.indicadores.loading" type="image" height="110" class="mt-2" />
+            <v-skeleton-loader v-if="blocos.mttr.loading" type="image" height="110" class="mt-2" />
             <div v-else class="chart-wrap mt-2">
               <canvas ref="canvasMttr"></canvas>
             </div>
@@ -331,21 +351,21 @@ onMounted(async () => {
                 <div class="kpi-label">MTBF — Tempo médio entre falhas</div>
                 <div
                   class="kpi-value mt-1"
-                  v-if="!blocos.indicadores.loading && !blocos.indicadores.erro"
+                  v-if="!blocos.mtbf.loading && !blocos.mtbf.erro"
                 >
-                  {{ blocos.indicadores.dados?.mtbfAtual ?? 0 }}h
+                  {{ blocos.mtbf.dados?.atual ?? 0 }}h
                 </div>
               </div>
               <v-btn
                 icon size="x-small" variant="text"
-                :loading="blocos.indicadores.loading"
-                @click="recarregarIndicadores"
+                :loading="blocos.mtbf.loading"
+                @click="recarregarMtbf"
               >
                 <font-awesome-icon icon="rotate-right" style="font-size:11px" />
               </v-btn>
             </div>
 
-            <v-skeleton-loader v-if="blocos.indicadores.loading" type="image" height="110" class="mt-2" />
+            <v-skeleton-loader v-if="blocos.mtbf.loading" type="image" height="110" class="mt-2" />
             <div v-else class="chart-wrap mt-2">
               <canvas ref="canvasMtbf"></canvas>
             </div>
@@ -638,6 +658,11 @@ onMounted(async () => {
 /* ── Tabela OS atrasadas ────────────────────────────────────────────── */
 :deep(.v-table) {
   font-size: 12px;
+  background: transparent !important;
+}
+
+:deep(.v-table .v-table__wrapper) {
+  background: transparent !important;
 }
 
 :deep(.v-table th) {
@@ -646,5 +671,52 @@ onMounted(async () => {
   color: rgba(0, 0, 0, 0.55) !important;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+/* ── Melhoria 4: chips de urgência ───────────────────────────────── */
+.chip-atraso {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+ 
+/* ≥ 5 dias — vermelho escuro, urgente */
+.chip-atraso--urgente {
+  background: #FFCDD2;
+  color: #B71C1C;
+  border: 1px solid #EF9A9A;
+}
+ 
+/* 3–4 dias — laranja escuro */
+.chip-atraso--alto {
+  background: #FFE0B2;
+  color: #BF360C;
+  border: 1px solid #FFCC80;
+}
+ 
+/* 1–2 dias — amarelo-laranja suave */
+.chip-atraso--medio {
+  background: #FFF9C4;
+  color: #F57F17;
+  border: 1px solid #FFF176;
+}
+ 
+/* < 1 dia — cinza neutro */
+.chip-atraso--baixo {
+  background: #F5F5F5;
+  color: #616161;
+  border: 1px solid #E0E0E0;
+}
+ 
+/* ── Melhoria 5: KPI card com tint de alerta ─────────────────────── */
+.kpi-card--alerta {
+  background-color: #FFF8F8 !important;
+  border-color: #FFCDD2 !important;
 }
 </style>

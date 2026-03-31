@@ -5,8 +5,11 @@ public class DashboardService(IDashboardRepository repository) : IDashboardServi
     public Task<DashboardStatusOsDto> ObterStatusOsAsync(Guid? estacaoId, CancellationToken ct = default)
         => repository.ObterStatusOsAsync(estacaoId, ct);
 
-    public Task<DashboardIndicadoresDto> ObterIndicadoresAsync(Guid? estacaoId, CancellationToken ct = default)
-        => repository.ObterIndicadoresAsync(estacaoId, ct);
+    public Task<DashboardMttrDto> ObterMttrAsync(Guid? estacaoId, CancellationToken ct = default)
+    => repository.ObterMttrAsync(estacaoId, ct);
+
+    public Task<DashboardMtbfDto> ObterMtbfAsync(Guid? estacaoId, CancellationToken ct = default)
+        => repository.ObterMtbfAsync(estacaoId, ct);
 
     public Task<DashboardDisponibilidadeDto> ObterDisponibilidadeAsync(Guid? estacaoId, CancellationToken ct = default)
         => repository.ObterDisponibilidadeAsync(estacaoId, ct);

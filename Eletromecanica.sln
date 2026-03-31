@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Presentation", "Presentation\", "{77B84CA3-43DE-BBA4-C9BF-BF501A5A58BB}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv2.0"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_57830"
 		Debug.AspNetCompiler.PhysicalPath = "Presentation\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_57830\"

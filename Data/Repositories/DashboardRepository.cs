@@ -1,6 +1,4 @@
-﻿using Core.Constants;
-
-namespace Data.Repositories;
+﻿namespace Data.Repositories;
 
 public class DashboardRepository(DbConnection connection) : IDashboardRepository
 {
@@ -35,47 +33,52 @@ public class DashboardRepository(DbConnection connection) : IDashboardRepository
     }
 
     // MTTR e MTBF
-    public async Task<DashboardIndicadoresDto> ObterIndicadoresAsync(
-        Guid? estacaoId,
-        CancellationToken ct = default)
+    public async Task<DashboardMttrDto> ObterMttrAsync(Guid? estacaoId, CancellationToken ct = default)
     {
         await DbUtils.EnsureOpenAsync(connection, ct);
-
         var (filtro, parametros) = DbUtils.MontarBase(estacaoId);
 
-        // MTTR: média do tempo entre DataSolicitacao e DataFinalizacao por mês
-        var sqlMttr = $@"
-            SELECT
-                FORMAT(os.DataSolicitacao, 'MMM', 'pt-BR')                                         AS Mes,
-                ROUND(
-                    ISNULL(AVG(CAST(DATEDIFF(MINUTE, os.DataSolicitacao, os.DataFinalizacao) AS FLOAT)) / 60.0, 0)
-                , 1)                                                                                AS Valor,
-                MONTH(os.DataSolicitacao)                                                           AS NumeroMes
-            FROM OrdemServico os
-            WHERE os.StatusId       = @StatusFinalizada
-              AND os.DataFinalizacao IS NOT NULL
-              AND os.DataSolicitacao >= @DataCorte
-              {filtro}
-            GROUP BY
-                FORMAT(os.DataSolicitacao, 'MMM', 'pt-BR'),
-                MONTH(os.DataSolicitacao)
-            ORDER BY NumeroMes ASC
-        ";
+        var sql = $@"
+        SELECT
+            FORMAT(os.DataSolicitacao, 'MMM', 'pt-BR') AS Mes,
+            ROUND(
+                ISNULL(AVG(CAST(DATEDIFF(MINUTE, os.DataSolicitacao, os.DataFinalizacao) AS FLOAT)) / 60.0, 0)
+            , 1) AS Valor,
+            MONTH(os.DataSolicitacao) AS NumeroMes
+        FROM OrdemServico os
+        WHERE os.StatusId       = @StatusFinalizada
+          AND os.DataFinalizacao IS NOT NULL
+          AND os.DataSolicitacao >= @DataCorte
+          {filtro}
+        GROUP BY FORMAT(os.DataSolicitacao, 'MMM', 'pt-BR'), MONTH(os.DataSolicitacao)
+        ORDER BY NumeroMes ASC";
 
-        // MTBF: tempo médio entre falhas corretivas (TipoOS = 0) via LEAD na tabela de vínculo
-        var sqlMtbf = $@"
+        var serie = (await connection.QueryAsync<DashboardSerieMensalDto>(
+            new CommandDefinition(sql, parametros, cancellationToken: ct)
+        )).ToList();
+
+        return new DashboardMttrDto
+        {
+            Atual = serie.LastOrDefault()?.Valor ?? 0,
+            Serie = serie
+        };
+    }
+
+    public async Task<DashboardMtbfDto> ObterMtbfAsync(Guid? estacaoId, CancellationToken ct = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, ct);
+        var (filtro, parametros) = DbUtils.MontarBase(estacaoId);
+
+        var sql = $@"
+        WITH IntervalosEntrefalhas AS (
             SELECT
-                FORMAT(os.DataSolicitacao, 'MMM', 'pt-BR')   AS Mes,
-                ROUND(
-                    ISNULL(AVG(CAST(DATEDIFF(HOUR, os.DataFinalizacao,
-                        LEAD(os.DataSolicitacao) OVER (
-                            PARTITION BY ose.EquipamentoId
-                            ORDER BY os.DataSolicitacao
-                        )
-                    ) AS FLOAT)), 0)
-                , 1)                                          AS Valor,
-                MONTH(os.DataSolicitacao)                     AS NumeroMes
-                ose.EquipamentoId
+                os.DataSolicitacao,
+                DATEDIFF(HOUR, os.DataFinalizacao,
+                    LEAD(os.DataSolicitacao) OVER (
+                        PARTITION BY ose.EquipamentoId
+                        ORDER BY os.DataSolicitacao
+                    )
+                ) AS IntervaloHoras
             FROM OrdemServico os
             JOIN OrdemServicoEquipamento ose ON ose.OrdemServicoId = os.Id
             WHERE os.StatusId       = @StatusFinalizada
@@ -83,26 +86,24 @@ public class DashboardRepository(DbConnection connection) : IDashboardRepository
               AND os.DataFinalizacao IS NOT NULL
               AND os.DataSolicitacao >= @DataCorte
               {filtro}
-            GROUP BY
-                FORMAT(os.DataSolicitacao, 'MMM', 'pt-BR'),
-                MONTH(os.DataSolicitacao)
-            ORDER BY NumeroMes ASC
-        ";
+        )
+        SELECT
+            FORMAT(DataSolicitacao, 'MMM', 'pt-BR') AS Mes,
+            ROUND(ISNULL(AVG(CAST(IntervaloHoras AS FLOAT)), 0), 1) AS Valor,
+            MONTH(DataSolicitacao) AS NumeroMes
+        FROM IntervalosEntrefalhas
+        WHERE IntervaloHoras IS NOT NULL
+        GROUP BY FORMAT(DataSolicitacao, 'MMM', 'pt-BR'), MONTH(DataSolicitacao)
+        ORDER BY NumeroMes ASC";
 
-        var serieMttr = (await connection.QueryAsync<DashboardSerieMensalDto>(
-            new CommandDefinition(sqlMttr, parametros, cancellationToken: ct)
+        var serie = (await connection.QueryAsync<DashboardSerieMensalDto>(
+            new CommandDefinition(sql, parametros, cancellationToken: ct)
         )).ToList();
 
-        var serieMtbf = (await connection.QueryAsync<DashboardSerieMensalDto>(
-            new CommandDefinition(sqlMtbf, parametros, cancellationToken: ct)
-        )).ToList();
-
-        return new DashboardIndicadoresDto
+        return new DashboardMtbfDto
         {
-            MttrAtual = serieMttr.LastOrDefault()?.Valor ?? 0,
-            MtbfAtual = serieMtbf.LastOrDefault()?.Valor ?? 0,
-            SerieMttr = serieMttr,
-            SerieMtbf = serieMtbf
+            Atual = serie.LastOrDefault()?.Valor ?? 0,
+            Serie = serie
         };
     }
 

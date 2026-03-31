@@ -15,10 +15,16 @@ class DashboardService extends FetchService {
     return await this.fetchResponse('GET', this.headerPadrao, null, false, route, true)
   }
 
-  async obterIndicadores(estacaoId = null) {
-    const route = `${this.endpoint}dashboard/indicadores${this._q(estacaoId)}`
+  async obterMttr(estacaoId = null) {
+    const route = `${this.endpoint}dashboard/mttr${this._q(estacaoId)}`
     return await this.fetchResponse('GET', this.headerPadrao, null, false, route, true)
   }
+
+  async obterMtbf(estacaoId = null) {
+    const route = `${this.endpoint}dashboard/mtbf${this._q(estacaoId)}`
+    return await this.fetchResponse('GET', this.headerPadrao, null, false, route, true)
+  }
+
 
   async obterDisponibilidade(estacaoId = null) {
     const route = `${this.endpoint}dashboard/disponibilidade${this._q(estacaoId)}`

@@ -278,3 +278,4 @@ Logs
 /StrykerOutput
 /Business/Extensions/OthersExtensions.cs
 /Presentation/dist.zip
+/.claude/settings.local.json

@@ -2,10 +2,8 @@
 
 public class DashboardIndicadoresDto
 {
-    public double MttrAtual { get; set; }
-    public double MtbfAtual { get; set; }
-    public List<DashboardSerieMensalDto> SerieMttr { get; set; } = [];
-    public List<DashboardSerieMensalDto> SerieMtbf { get; set; } = [];
+    public double Atual { get; set; }
+    public List<DashboardSerieMensalDto> Serie { get; set; } = [];
 }
 
 public class DashboardSerieMensalDto

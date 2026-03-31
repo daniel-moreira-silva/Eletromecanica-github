@@ -3,7 +3,8 @@
 public interface IDashboardRepository
 {
     Task<DashboardStatusOsDto> ObterStatusOsAsync(Guid? estacaoId, CancellationToken ct = default);
-    Task<DashboardIndicadoresDto> ObterIndicadoresAsync(Guid? estacaoId, CancellationToken ct = default);
+    Task<DashboardMttrDto> ObterMttrAsync(Guid? estacaoId, CancellationToken ct = default);
+    Task<DashboardMtbfDto> ObterMtbfAsync(Guid? estacaoId, CancellationToken ct = default);
     Task<DashboardDisponibilidadeDto> ObterDisponibilidadeAsync(Guid? estacaoId, CancellationToken ct = default);
     Task<DashboardMotivacaoDto> ObterMotivacaoAsync(Guid? estacaoId, CancellationToken ct = default);
     Task<DashboardCustosDto> ObterCustosAsync(Guid? estacaoId, CancellationToken ct = default);
