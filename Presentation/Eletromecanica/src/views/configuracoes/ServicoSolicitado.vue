@@ -60,7 +60,7 @@ const rawButtons = ref([
   },
   {
     function: "editar",
-    customButtonIcon: "pencil",
+    customButtonIcon: "pen-to-square",
     customButtonDescription: "Editar",
     color: "primary",
     hasSelectedItem: true,
@@ -420,8 +420,8 @@ watch(modalDadosMestre, (abriu) => {
             <v-card-text class="pa-4">
               <div class="d-flex align-center pb-2">
                 <font-awesome-icon
-                  :icon="inserindo ? 'plus' : 'pencil'"
-                  class="text-primary mr-1"
+                  :icon="inserindo ? 'plus' : 'pen-to-square'"
+                  class="text-primary mr-2 fa-lg"
                 />
                 <span class="title black--text">
                   {{ inserindo ? "Inserir Serviço Solicitado" : "Editar Serviço Solicitado" }}

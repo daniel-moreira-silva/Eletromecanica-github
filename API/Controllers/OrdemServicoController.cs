@@ -57,6 +57,21 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         }
     }
 
+    [HttpPost("lista-count")]
+    public async Task<IActionResult> ListaCountOrdemServicoAsync([FromBody] OrdemServicoFilter filter, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.ListaCountOrdemServicoAsync(filter, cancellationToken);
+            return Ok(new SuccessMessage("Lista count retornada com sucesso.", result));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao buscar lista count.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
     [HttpGet("buscar-por-endereco")]
     public async Task<IActionResult> GetByAddressAsync([FromQuery] string search, CancellationToken cancellationToken)
     {

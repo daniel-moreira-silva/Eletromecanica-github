@@ -60,7 +60,7 @@ const rawButtons = ref([
   },
   {
     function: "editar",
-    customButtonIcon: "pencil",
+    customButtonIcon: "pen-to-square",
     customButtonDescription: "Editar",
     color: "primary",
     hasSelectedItem: true,
@@ -420,7 +420,7 @@ watch(modalDadosMestre, (abriu) => {
             <v-card-text class="pa-4">
               <div class="d-flex align-center pb-2">
                 <font-awesome-icon
-                  :icon="inserindo ? 'plus' : 'pencil'"
+                  :icon="inserindo ? 'plus' : 'pen-to-square'"
                   class="text-primary mr-1"
                 />
                 <span class="title black--text">
@@ -520,4 +520,11 @@ watch(modalDadosMestre, (abriu) => {
   </v-container>
 </template>
 
-<style scoped></style>
+<style scoped>
+.app-container {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+</style>

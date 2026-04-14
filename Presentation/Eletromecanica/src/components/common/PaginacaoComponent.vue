@@ -11,27 +11,27 @@ const emits = defineEmits(["alterarPagina", "alterarItensPorPagina"]);
 
 function primeiraPagina() {
   paginaAtualInterna.value = 1;
-  emits("alterarPagina", paginaAtualInterna);
+  emits("alterarPagina", paginaAtualInterna.value);
 }
 function proximaPagina() {
   paginaAtualInterna.value =
     paginaAtualInterna.value < props.totalPaginas
       ? paginaAtualInterna.value + 1
       : props.totalPaginas;
-  emits("alterarPagina", paginaAtualInterna);
+  emits("alterarPagina", paginaAtualInterna.value);
 }
 function paginaAnterior() {
   paginaAtualInterna.value =
     paginaAtualInterna.value > 1 ? paginaAtualInterna.value - 1 : paginaAtualInterna.value;
-  emits("alterarPagina", paginaAtualInterna);
+  emits("alterarPagina", paginaAtualInterna.value);
 }
 function ultimaPagina() {
   paginaAtualInterna.value = props.totalPaginas;
-  emits("alterarPagina", paginaAtualInterna);
+  emits("alterarPagina", paginaAtualInterna.value);
 }
 function alterarPagina() {
-  emits("alterarPagina", paginaAtualInterna);
-  paginaAtualInterna.value.blur();
+  emits("alterarPagina", paginaAtualInterna.value);
+  refPaginaAtual.value?.blur();
 }
 function alterarItensPorPagina() {
   emits("alterarItensPorPagina", itensPorPagina.value);
@@ -75,7 +75,7 @@ const pAtuaisList = computed(function () {
           <div style="width: 115px;" class="hidden-sm-and-down">
             <v-select class="pa-0 ma-0" v-model="paginaAtualInterna" :items="pAtuaisList"
               :menu-props="{ maxWidth: '100', maxHeight: '400', offsetOverflow: false, offsetY: true, top: true }"
-              density="compact" variant="solo" flat hide-details @change="alterarPagina" ref="refPaginaAtual">
+              density="compact" variant="solo" flat hide-details @update:modelValue="alterarPagina" ref="refPaginaAtual">
             </v-select>
           </div>
           <div class="pagina-atual-descricao ml-1 ml-md-0 hidden-sm-and-down">

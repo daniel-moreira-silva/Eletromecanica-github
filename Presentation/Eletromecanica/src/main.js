@@ -36,6 +36,16 @@ const usuarioSeguranca = {
   password: process.env.VUE_APP_PASSWORD
 }
 
+// Status Ordem de Serviço
+const statusOrdemServico = {
+  solicitada:   'E4011FE2-1CFC-46A4-9BB7-02F1E154C00E',
+  iniciada:     '2CF3AF37-18CD-4DF6-BE22-91B4DE792B25',
+  emAndamento:  '132AE55D-A544-439E-8D07-CDC643CE4E78',
+  finalizada:   '8330AEC6-5E4D-4B67-8620-0C13FAEC04C5',
+  cancelada:    'FC34601C-803F-4DA4-B4C9-0843AA1E8E4A',
+  pendente:     '642A2B4C-1B28-4857-9FB9-C652B889392B',
+}
+
 // Injeta valores globais via provide
 app.provide('chaveSeguranca', chaveSeguranca)
 app.provide('endpoint', endpoint)
@@ -44,6 +54,7 @@ app.provide('usuarioSeguranca', usuarioSeguranca)
 app.provide('apiKeyMaps', apiKeyMaps)
 app.provide('cidadeCliente', cidadeCliente)
 app.provide('estadoCliente', estadoCliente)
+app.provide('statusOrdemServico', statusOrdemServico)
 
 //Temporário
 let data = {
@@ -272,6 +283,128 @@ let data = {
               ]
             }
           ]
+        },
+        {
+          id: "024e975c-5beb-4597-a3da-076266c8c206",
+          descricao: "Gestão de serviços e Equipes",
+          urlControle: "/operacao",
+          ordenacao: 2,
+          ativo: true,
+          ativoFormatado: "Ativo",
+          telas: [
+            {
+              id: "2aed7cf0-6be9-4071-ad3b-b7c0d618d70c",
+              moduloId: "024e975c-5beb-4597-a3da-076266c8c206",
+              descricao: "Detalhar Ocorrência",
+              url: "/detalhar-ocorrencia/:numero",
+              ordenacao: 2,
+              ativo: false,
+              exibirMenu: false,
+              ativoFormatado: "Inativo",
+              permissaoDisponivel: "[Criar,Editar,Ler,Exportar,Excluir]",
+              permissoesPerfil: null,
+              permissoesUsuario: [
+                {
+                  id: "40a2b9d3-a563-46e2-8bdd-1a69af016e4d",
+                  usuarioId: "275f7e8d-93d6-4065-8f48-2ad83b8feedd",
+                  telaId: "2aed7cf0-6be9-4071-ad3b-b7c0d618d70c",
+                  permissaoDisponivel: "[Criar,Editar,Ler,Exportar,Excluir]",
+                  dataAtribuicao: "2026-04-01T10:35:58.043",
+                  dataInicio: "2026-04-01T00:00:00",
+                  dataExpiracao: "2027-04-01T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "01/04/2026",
+                  dataInicioFormatada: "01/04/2026",
+                  dataExpiracaoFormatada: "01/04/2027"
+                }
+              ]
+            },
+            {
+              id: "e7016281-0447-4aeb-8640-1bf50dad2dfb",
+              moduloId: "024e975c-5beb-4597-a3da-076266c8c206",
+              descricao: "Detalhes da Ocorrência",
+              url: "/detalhes-ocorrencia/:numero",
+              ordenacao: 2,
+              ativo: true,
+              exibirMenu: false,
+              ativoFormatado: "Ativo",
+              permissaoDisponivel: "[Ação,Excluir,Exportar,Ler,Editar,Criar]",
+              permissoesPerfil: null,
+              permissoesUsuario: [
+                {
+                  id: "38faca76-045e-4193-ad41-8722e32877aa",
+                  usuarioId: "275f7e8d-93d6-4065-8f48-2ad83b8feedd",
+                  telaId: "e7016281-0447-4aeb-8640-1bf50dad2dfb",
+                  permissaoDisponivel: "[Ação,Criar,Editar,Excluir,Exportar,Ler]",
+                  dataAtribuicao: "2026-04-01T10:35:52.78",
+                  dataInicio: "2026-04-01T00:00:00",
+                  dataExpiracao: "2027-04-01T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "01/04/2026",
+                  dataInicioFormatada: "01/04/2026",
+                  dataExpiracaoFormatada: "01/04/2027"
+                }
+              ]
+            },
+            {
+              id: "7edbd684-a056-4cf4-9ea1-67e545e80746",
+              moduloId: "024e975c-5beb-4597-a3da-076266c8c206",
+              descricao: "Operações",
+              url: "/operacao",
+              ordenacao: 2,
+              ativo: true,
+              exibirMenu: false,
+              ativoFormatado: "Ativo",
+              permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesPerfil: null,
+              permissoesUsuario: [
+                {
+                  id: "2ce585fc-be71-479d-8aa6-3e793448707c",
+                  usuarioId: "275f7e8d-93d6-4065-8f48-2ad83b8feedd",
+                  telaId: "7edbd684-a056-4cf4-9ea1-67e545e80746",
+                  permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+                  dataAtribuicao: "2026-04-01T10:35:55.423",
+                  dataInicio: "2026-04-01T00:00:00",
+                  dataExpiracao: "2027-04-01T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "01/04/2026",
+                  dataInicioFormatada: "01/04/2026",
+                  dataExpiracaoFormatada: "01/04/2027"
+                }
+              ]
+            },
+            {
+              id: "4c75f69e-a739-41f4-9d7f-9444c1b381ee",
+              moduloId: "024e975c-5beb-4597-a3da-076266c8c206",
+              descricao: "Lista Ocorrências",
+              url: "/lista-ocorrencia",
+              ordenacao: 2,
+              ativo: true,
+              exibirMenu: false,
+              ativoFormatado: "Ativo",
+              permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesPerfil: null,
+              permissoesUsuario: [
+                {
+                  id: "41b2a647-139f-4302-8590-7e5bb9c42a23",
+                  usuarioId: "275f7e8d-93d6-4065-8f48-2ad83b8feedd",
+                  telaId: "4c75f69e-a739-41f4-9d7f-9444c1b381ee",
+                  permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+                  dataAtribuicao: "2026-04-01T10:35:57.147",
+                  dataInicio: "2026-04-01T00:00:00",
+                  dataExpiracao: "2027-04-01T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "01/04/2026",
+                  dataInicioFormatada: "01/04/2026",
+                  dataExpiracaoFormatada: "01/04/2027"
+                }
+              ]
+            }
+          ]
         }
       ]
     }
@@ -285,6 +418,7 @@ app.config.globalProperties.$chaveSeguranca = chaveSeguranca
 app.config.globalProperties.$endpoint = endpoint
 app.config.globalProperties.$headerPadrao = { 'Content-Type': 'application/json' }
 app.config.globalProperties.$usuarioSeguranca = usuarioSeguranca
+app.config.globalProperties.$statusOrdemServico = statusOrdemServico
 
 // Registro global do componente FontAwesome
 registerFontAwesome(app)

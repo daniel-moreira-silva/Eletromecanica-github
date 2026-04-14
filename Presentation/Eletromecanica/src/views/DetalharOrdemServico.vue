@@ -225,7 +225,7 @@ import { ref, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/base/BaseButton.vue'
 import { GoogleMap, AdvancedMarker  } from "vue3-google-map"
-import OcorrenciaService from '@/services/ordem-servico/nova-ordem-servico'
+import OcorrenciaService from '@/services/ordem-servico/ordem-servico-service'
 import Loading from '@/components/base/LoadingOverlay.vue'
 import Snackbar from '@/components/base/Snackbar.vue'
 

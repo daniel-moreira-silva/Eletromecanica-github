@@ -476,7 +476,7 @@ onBeforeUnmount(() => {
               @click="adicionarAnexo"
               :disabled="!podeUsarArquivos"
             >
-              <v-icon>plus</v-icon>
+              <font-awesome-icon icon="plus" class="fa-2xl"/>
             </v-btn>
           </template>
         </v-tooltip>
@@ -502,7 +502,7 @@ onBeforeUnmount(() => {
                 class="text-center"
               >
                 <template #activator="{ props: mp }">
-                  <v-icon v-bind="mp" color="white">chevron-down</v-icon>
+                  <font-awesome-icon v-bind="mp" color="white" icon="circle-chevron-down" class="fa-2x mr-1" />
                 </template>
 
                 <v-card class="max-height-search-box">
@@ -510,9 +510,7 @@ onBeforeUnmount(() => {
                     <v-list class="pa-0">
                       <v-list-item @click="abrirModalTags(item)">
                         <v-list-item-title class="d-flex align-center">
-                          <v-icon color="primary" class="mr-1">
-                            plus
-                          </v-icon>
+                          <font-awesome-icon class="text-primary mr-4" icon="plus" />
                           Add Tag
                         </v-list-item-title>
                       </v-list-item>
@@ -521,18 +519,14 @@ onBeforeUnmount(() => {
                         v-if="item.imagem || item.pdf"
                       >
                         <v-list-item-title class="d-flex align-center">
-                          <v-icon left color="primary">
-                            mdi:mdi-folder-open-outline
-                          </v-icon>
+                          <font-awesome-icon class="text-primary mr-3" icon="fa-regular fa-folder-open" />
                           Abrir
                         </v-list-item-title>
                       </v-list-item>
 
                       <v-list-item @click="baixarAnexo(item)">
                         <v-list-item-title class="d-flex align-center">
-                          <v-icon color="primary" class="mr-1">
-                            mdi:mdi-cloud-download-outline
-                          </v-icon>
+                          <font-awesome-icon class="text-primary mr-2" icon="cloud-arrow-down" />
                           Download
                         </v-list-item-title>
                       </v-list-item>
@@ -540,18 +534,14 @@ onBeforeUnmount(() => {
 
                       <v-list-item @click="confirmarTrocaNomeAnexo(item)">
                         <v-list-item-title class="d-flex align-center">
-                          <v-icon class="mr-1" color="primary">
-                            mdi:mdi-pencil-outline
-                          </v-icon>
+                          <font-awesome-icon class="text-primary mr-3" icon="pen-to-square" />
                           Renomear
                         </v-list-item-title>
                       </v-list-item>
 
                       <v-list-item @click="confirmarExclusaoAnexo(item)">
                         <v-list-item-title class="d-flex align-center" color="red">
-                          <v-icon class="mr-1" color="red">
-                            mdi:mdi-trash-can-outline
-                          </v-icon>
+                          <font-awesome-icon class="mr-4" color="red" icon="fa-regular fa-trash-can" />
                           Excluir
                         </v-list-item-title>
                       </v-list-item>
@@ -572,9 +562,7 @@ onBeforeUnmount(() => {
                 <embed :src="item.previewUrl" scrolling="no" />
               </div>
 
-              <v-icon class="anexo-icone" v-else>
-                mdi:mdi-file-document-multiple-outline
-              </v-icon>
+              <font-awesome-icon class="anexo-icone" icon="fa-regular fa-file-lines" v-else />
             </div>
 
             <div class="mt-1" v-if="item.tags?.length">
@@ -605,7 +593,7 @@ onBeforeUnmount(() => {
       <!-- Vazio -->
       <div class="nenhum-anexo" ref="dropArea" v-if="anexos.length === 0">
         <div class="without-pointer icone-container" ref="iconeNenhumAnexo">
-          <v-icon icon="mdi:mdi-cloud-upload-outline" class="icone-nenhum-anexo" />
+          <font-awesome-icon icon="cloud-arrow-up" class="icone-nenhum-anexo" />
         </div>
 
         <div class="texto-nenhum-anexo without-pointer">Arraste arquivos aqui</div>
@@ -618,7 +606,7 @@ onBeforeUnmount(() => {
             @click="adicionarAnexo"
             :disabled="!podeUsarArquivos"
           >
-            <v-icon class="mr-1">plus</v-icon>
+            <font-awesome-icon class="mr-1" icon="plus" />
             Clique para abrir o explorador de arquivos
           </v-btn>
         </div>
@@ -630,10 +618,10 @@ onBeforeUnmount(() => {
       <v-card>
         <v-card-text class="pa-4">
           <div class="d-flex align-center pb-2">
-            <v-icon color="red" class="mr-1">trash-can-outline</v-icon>
+            <font-awesome-icon color="red" class="mr-1" icon="fa-regular fa-trash-can" />
             <span class="title black--text">Excluir anexo</span>
             <v-spacer />
-            <v-icon color="black" @click="fecharModalExclusao">close</v-icon>
+            <font-awesome-icon icon="close" @click="fecharModalExclusao" style="cursor: pointer" />
           </div>
           <v-divider class="pb-4" />
           <p>
@@ -644,10 +632,10 @@ onBeforeUnmount(() => {
         <v-card-actions class="pt-0">
           <v-spacer />
           <v-btn color="grey" text right class="text-caption" @click="fecharModalExclusao">
-            <v-icon class="text-caption">close</v-icon>NÃO
+            <font-awesome-icon class="text-caption mr-1" icon="close" />NÃO
           </v-btn>
           <v-btn color="red" text class="text-caption" @click="excluirAnexo">
-            <v-icon class="text-caption">check</v-icon>SIM
+            <font-awesome-icon class="text-caption mr-1" icon="check" />SIM
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -658,10 +646,10 @@ onBeforeUnmount(() => {
       <v-card>
         <v-card-text class="pa-4">
           <div class="d-flex align-center pb-2">
-            <v-icon color="primary" class="mr-1">pencil</v-icon>
+            <font-awesome-icon class="text-primary mr-2" icon="pen-to-square" />
             <span class="title black--text">Renomear anexo</span>
             <v-spacer />
-            <v-icon color="black" @click="fecharModalRenomear">close</v-icon>
+            <font-awesome-icon color="black" icon="close" @click="fecharModalRenomear" style="cursor: pointer" />
           </div>
           <v-divider class="pb-4" />
 
@@ -686,10 +674,10 @@ onBeforeUnmount(() => {
         <v-card-actions class="pt-0">
           <v-spacer />
           <v-btn color="red" text right class="text-caption" @click="fecharModalRenomear">
-            <v-icon class="text-caption">close</v-icon>NÃO
+            <font-awesome-icon class="text-caption mr-2" icon="close" />NÃO
           </v-btn>
           <v-btn color="primary" text class="text-caption" @click="renomearAnexo">
-            <v-icon class="text-caption">check</v-icon>SIM
+            <font-awesome-icon class="text-caption mr-2" icon="check" />SIM
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -700,10 +688,10 @@ onBeforeUnmount(() => {
       <v-card>
         <v-card-text class="pa-4">
           <div class="d-flex align-center pb-2">
-            <v-icon color="primary" class="mr-1">mdi:mdi-tag-outline</v-icon>
+            <font-awesome-icon class="text-primary mr-1" icon="fa-solid fa-tags" />
             <span class="title black--text">Tags do arquivo</span>
             <v-spacer />
-            <v-icon color="black" @click="modalTags = false">close</v-icon>
+            <font-awesome-icon color="black" @click="modalTags = false" icon="close" style="cursor: pointer" />
           </div>
 
           <v-divider class="pb-4" />
@@ -763,7 +751,7 @@ onBeforeUnmount(() => {
               height="40"
               @click="criarESelecionarTag"
             >
-              <v-icon class="mr-1">mdi:mdi-plus</v-icon>
+              <font-awesome-icon class="mr-1" icon="plus" />
               Criar
             </v-btn>
           </div>
@@ -893,7 +881,7 @@ onBeforeUnmount(() => {
 .anexo-icone {
   font-size: 160px;
   text-align: center;
-  height: 208px;
+  height: 140px;
   width: 100%;
 }
 

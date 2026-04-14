@@ -166,7 +166,7 @@ const regraPreventivaFields = ref([
   {
     descricao: 'Ações', valor: 'ellipsis', tipo: 'menu', filtravel: false, ordenado: null, class: 'text-left',
     opcoesMenu: [
-      { descricao: 'Editar', icone: 'pencil', classe: 'text-left' },
+      { descricao: 'Editar', icone: 'pen-to-square', classe: 'text-left' },
       { descricao: 'Deletar', icone: 'trash', classe: 'text-left' },
     ]
   }
@@ -801,7 +801,7 @@ init();
         </v-tooltip>
       </div>
 
-      <font-awesome-icon :icon="inserindo ? 'plus' : 'pencil'" class="text-primary mr-2" />
+      <font-awesome-icon :icon="inserindo ? 'plus' : 'pen-to-square'" class="text-primary mr-1 fa-lg" />
       <div class="page-title">{{ titulo }}</div>
 
       <v-spacer />
@@ -1292,7 +1292,7 @@ init();
           <v-dialog v-model="modalRegraPreventiva" max-width="700">
             <v-card>
               <v-card-title>
-                <font-awesome-icon :icon="regraPreventivaEdicao.id ? 'pencil' : 'plus'" class="text-primary mr-1" />
+                <font-awesome-icon :icon="regraPreventivaEdicao.id ? 'pen-to-square' : 'plus'" class="text-primary mr-1" />
                 {{ regraPreventivaEdicao.id ? "Editar regra preventiva" : "Nova regra preventiva" }}
               </v-card-title>
 

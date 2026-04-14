@@ -67,7 +67,7 @@ const rawButtons = [
   },
   {
     function: "editar",
-    customButtonIcon: "pencil",
+    customButtonIcon: "pen-to-square",
     customButtonDescription: "Editar",
     color: "primary",
     hasSelectedItem: true,

@@ -237,7 +237,7 @@ onMounted(async () => {
 
     <!-- ── Cabeçalho ──────────────────────────────────────────────── -->
     <div class="d-flex align-center mb-3">
-      <font-awesome-icon icon="magnifying-glass-chart" class="text-primary mr-2" />
+      <font-awesome-icon icon="chart-column" class="text-primary mr-2 fa-2xl" />
       <div class="page-title">Dashboard de manutenção</div>
 
       <v-spacer />

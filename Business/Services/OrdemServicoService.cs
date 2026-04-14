@@ -102,4 +102,7 @@ public class OrdemServicoService(DbConnection connection,
 
     public async Task<IEnumerable<OrdemServico>> GetByAddressAsync(string search, CancellationToken cancellationToken)
         => await repository.GetByAddressAsync(search, cancellationToken: cancellationToken);
+
+    public async Task<IEnumerable<ListaCountOrdemServico>> ListaCountOrdemServicoAsync(OrdemServicoFilter filtro, CancellationToken cancellationToken)
+        => await repository.ListaCountOrdemServicoAsync(filtro, cancellationToken: cancellationToken);
 }

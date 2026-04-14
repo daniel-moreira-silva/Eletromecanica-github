@@ -17,6 +17,16 @@ public class SqlQueryBuilder
             Parameters.Add(paramName, value);
     }
 
+    public void Where(string condition, Dictionary<string, object?> parameters)
+    {
+        _where.Append(_hasWhere ? " AND " : " WHERE ");
+        _where.Append(condition);
+        _hasWhere = true;
+
+        foreach (var (key, value) in parameters)
+            Parameters.Add(key, value);
+    }
+
     public string Build(string baseQuery)
         => baseQuery + _where;
 }

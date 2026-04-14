@@ -3,14 +3,14 @@
     <v-list nav density="comfortable" class="menu-list">
 
       <!-- Dashboard -->
-      <!-- <v-list-item title="Dashboard" dense clickable @click="onChildClick({ value: '/painel-manobras' })"
-        :class="['cursor-pointer', { 'active-item': isActive('/painel-manobras') }]">
+      <v-list-item title="Dashboard" dense clickable @click="onChildClick({ value: '/' })"
+        :class="['cursor-pointer', { 'active-item': isActive('/') }]">
         <template #prepend>
           <v-icon icon="fas fa-chart-line" class="group-icon" />
         </template>
       </v-list-item>
 
-      <v-divider class="mx-2 my-2" /> -->
+      <v-divider class="mx-2 my-2" />
 
       <!-- MÓDULOS DINÂMICOS, FILTRADOS POR PERMISSÕES -->
       <template v-for="(mod, idx) in filteredMenu" :key="mod.title">

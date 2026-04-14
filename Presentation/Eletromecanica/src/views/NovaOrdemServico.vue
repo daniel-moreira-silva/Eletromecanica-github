@@ -4,7 +4,7 @@ import { QuillEditor } from '@vueup/vue-quill'
 import { GoogleMap, AdvancedMarker } from 'vue3-google-map'
 import BaseButton from '@/components/base/BaseButton.vue'
 import LoadingOverlay from '@/components/base/LoadingOverlay.vue'
-import NovaOrdemServicoService from '@/services/ordem-servico/nova-ordem-servico'
+import NovaOrdemServicoService from '@/services/ordem-servico/ordem-servico-service'
 import ServicoSolicitadoService from '@/services/configuracoes/servico-solicitado-service'
 import EstacaoService from "@/services/configuracoes/estacao-service.js"
 import EquipamentoService from "@/services/configuracoes/equipamento-service.js"

@@ -219,7 +219,7 @@ const rawButtons = ref([
   },
   {
     function: "editar",
-    customButtonIcon: "pencil",
+    customButtonIcon: "pen-to-square",
     customButtonDescription: "Editar",
     color: "primary",
     hasSelectedItem: true,
@@ -714,8 +714,8 @@ listarTiposEstacao();
               <v-card-text class="pa-4">
                 <div class="d-flex align-center pb-2">
                   <font-awesome-icon
-                    :icon="inserindo ? 'plus' : 'pencil'"
-                    class="text-primary mr-1"
+                    :icon="inserindo ? 'plus' : 'pen-to-square'"
+                    class="text-primary mr-2 fa-lg"
                   />
                   <span class="title black--text">
                     {{ inserindo ? "Inserir Estação" : "Editar Estação" }}
@@ -876,6 +876,7 @@ listarTiposEstacao();
                               <v-card-text class="pa-0">
                                 <div class="map-wrapper">
                                   <GoogleMap
+                                    v-if="modalDadosMestre"
                                     :api-key="apiKey"
                                     style="width: 100%; height: 100%;"
                                     :center="stationMapCenter"
