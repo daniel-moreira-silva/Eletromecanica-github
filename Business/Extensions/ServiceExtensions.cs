@@ -1,6 +1,4 @@
-﻿using Data.Repositories;
-
-namespace Business.Extensions;
+﻿namespace Business.Extensions;
 
 public static class ServiceExtensions
 {
@@ -18,6 +16,11 @@ public static class ServiceExtensions
         services.AddScoped<IRegraPreventivaService, RegraPreventivaService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IMotivoCancelamentoService, MotivoCancelamentoService>();
+        services.AddScoped<IFuncionarioService, FuncionarioService>();
+        services.AddScoped<ICargoService, CargoService>();
+        services.AddScoped<ISetorService, SetorService>();
+        services.AddScoped<ITipoFuncionarioService, TipoFuncionarioService>();
+        services.AddScoped<IFuncionarioService, FuncionarioService>();
 
         return services;
     }

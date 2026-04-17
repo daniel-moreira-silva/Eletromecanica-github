@@ -44,6 +44,12 @@ const routes = [
     component: () => import('@/views/configuracoes/MotivoCancelamento.vue')
   },
   {
+    path: "/funcionario",
+    name: "Funcionários",
+    component: () => import("@/views/configuracoes/Funcionario.vue"),
+    meta: { requiresAuth: true, tela: "Funcionarios" },
+  },
+  {
     path: '/ocorrencia-tabs',
     name: 'OcorrenciaTabs',
     component: () => import('@/views/OrdemServicoTabs.vue')

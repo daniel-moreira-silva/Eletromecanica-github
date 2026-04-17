@@ -22,6 +22,11 @@ public static class ServiceExtension
         services.AddScoped<IRegraPreventivaRepository, RegraPreventivaRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IMotivoCancelamentoRepository, MotivoCancelamentoRepository>();
+        services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
+        services.AddScoped<ICargoRepository, CargoRepository>();
+        services.AddScoped<ISetorRepository, SetorRepository>();
+        services.AddScoped<ITipoFuncionarioRepository, TipoFuncionarioRepository>();
+        services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
 
         services.AddRefitClient<IGoogleMapClient>()
             .ConfigureHttpClient(client =>

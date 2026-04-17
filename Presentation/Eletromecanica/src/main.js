@@ -244,6 +244,34 @@ let data = {
                 }
               ]
             },
+            {
+              id: "52754c37-dc68-4204-a11a-f775c772d9b4",
+              moduloId: "bc728d1d-c586-45d1-a49e-5445add6fbdb",
+              descricao: "Funcionários",
+              url: "/funcionario",
+              ordenacao: 2,
+              ativo: true,
+              exibirMenu: true,
+              ativoFormatado: "Ativo",
+              permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesPerfil: null,
+              permissoesUsuario: [
+                {
+                  id: "b6579b4f-791c-46c0-8d34-c3b09a08236f",
+                  usuarioId: "275f7e8d-93d6-4065-8f48-2ad83b8feedd",
+                  telaId: "52754c37-dc68-4204-a11a-f775c772d9b4",
+                  permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+                  dataAtribuicao: "2026-04-01T10:36:00.447",
+                  dataInicio: "2026-04-01T00:00:00",
+                  dataExpiracao: "2027-04-01T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "01/04/2026",
+                  dataInicioFormatada: "01/04/2026",
+                  dataExpiracaoFormatada: "01/04/2027"
+                }
+              ]
+            },
           ]
         },
         {
