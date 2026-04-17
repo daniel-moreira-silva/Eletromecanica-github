@@ -409,7 +409,7 @@ CREATE INDEX IX_DocumentoTag_TagId ON dbo.DocumentoTag (TagId);
 GO
 
 /* =========================================================
-   6) OS (ajustada para 1:N Equipamentos)
+   7) OS
    ========================================================= */
 IF OBJECT_ID('dbo.OrdemServicoServicoExecutado', 'U') IS NOT NULL DROP TABLE dbo.OrdemServicoServicoExecutado;
 IF OBJECT_ID('dbo.OrdemServicoServicoSolicitado', 'U') IS NOT NULL DROP TABLE dbo.OrdemServicoServicoSolicitado;
@@ -504,7 +504,7 @@ CREATE INDEX IX_Agendamento_Ativo ON dbo.Agendamento(Ativo);
 GO
 
 /* -----------------------------
-   Ordem de Serviço (sem EquipamentoId)
+   Ordem de Serviço
 ----------------------------- */
 CREATE TABLE dbo.OrdemServico (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_OrdemServico PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
@@ -550,6 +550,8 @@ CREATE TABLE dbo.OrdemServico (
 
     -- (Opcional) controle lógico
     Ativo BIT NOT NULL CONSTRAINT DF_OrdemServico_Ativo DEFAULT 1,
+    IsAgendada BIT NULL,
+    IsProgramada BIT NULL,
 
     CONSTRAINT FK_OrdemServico_Estacao
         FOREIGN KEY (EstacaoId) REFERENCES dbo.Estacao(Id),
@@ -648,4 +650,90 @@ CREATE TABLE dbo.OrdemServicoServicoExecutado (
 GO
 
 CREATE INDEX IX_OS_ServicoExecutado_Servico ON dbo.OrdemServicoServicoExecutado (ServicoExecutadoId);
+GO
+/* =========================================================
+   8) FUNCIONARIO
+     - Tabelas de catálogo + tabela principal com FKs
+   ========================================================= */
+IF OBJECT_ID('dbo.Funcionario', 'U')       IS NOT NULL DROP TABLE dbo.Funcionario;
+IF OBJECT_ID('dbo.Cargo', 'U')             IS NOT NULL DROP TABLE dbo.Cargo;
+IF OBJECT_ID('dbo.Setor', 'U')             IS NOT NULL DROP TABLE dbo.Setor;
+IF OBJECT_ID('dbo.TipoFuncionario', 'U')   IS NOT NULL DROP TABLE dbo.TipoFuncionario;
+GO
+
+/* -----------------------------
+   Cargo
+----------------------------- */
+CREATE TABLE dbo.Cargo (
+    Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Cargo PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Descricao NVARCHAR(255) NOT NULL,
+    Ativo BIT NOT NULL CONSTRAINT DF_Cargo_Ativo DEFAULT 1,
+
+    CONSTRAINT UQ_Cargo_Descricao UNIQUE (Descricao)
+);
+GO
+
+CREATE INDEX IX_Cargo_Ativo ON dbo.Cargo(Ativo);
+GO
+
+/* -----------------------------
+   Setor
+----------------------------- */
+CREATE TABLE dbo.Setor (
+    Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Setor PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Descricao NVARCHAR(255) NOT NULL,
+    Ativo BIT NOT NULL CONSTRAINT DF_Setor_Ativo DEFAULT 1,
+
+    CONSTRAINT UQ_Setor_Descricao UNIQUE (Descricao)
+);
+GO
+
+CREATE INDEX IX_Setor_Ativo ON dbo.Setor(Ativo);
+GO
+
+/* -----------------------------
+   TipoFuncionario
+   Ex.: Operador, Supervisor, Técnico, Engenheiro...
+----------------------------- */
+CREATE TABLE dbo.TipoFuncionario (
+    Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_TipoFuncionario PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Descricao NVARCHAR(255) NOT NULL,
+    Ativo BIT NOT NULL CONSTRAINT DF_TipoFuncionario_Ativo DEFAULT 1,
+
+    CONSTRAINT UQ_TipoFuncionario_Descricao UNIQUE (Descricao)
+);
+GO
+
+CREATE INDEX IX_TipoFuncionario_Ativo ON dbo.TipoFuncionario(Ativo);
+GO
+
+/* -----------------------------
+   Funcionario
+----------------------------- */
+CREATE TABLE dbo.Funcionario (
+    Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Funcionario PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+
+    -- FKs obrigatórias
+    CargoId UNIQUEIDENTIFIER NOT NULL,
+    SetorId UNIQUEIDENTIFIER NOT NULL,
+    TipoFuncionarioId UNIQUEIDENTIFIER NOT NULL,
+
+    -- Identificação
+    Codigo NVARCHAR(255) NOT NULL,
+    Nome NVARCHAR(255) NOT NULL,
+    Terceirizado BIT NOT NULL CONSTRAINT DF_Funcionario_Terceirizado DEFAULT 0,
+    Ativo BIT NOT NULL CONSTRAINT DF_Funcionario_Ativo DEFAULT 1,
+
+    CONSTRAINT FK_Funcionario_Cargo FOREIGN KEY (CargoId) REFERENCES dbo.Cargo(Id),
+    CONSTRAINT FK_Funcionario_Setor FOREIGN KEY (SetorId) REFERENCES dbo.Setor(Id),
+    CONSTRAINT FK_Funcionario_TipoFuncionario FOREIGN KEY (TipoFuncionarioId) REFERENCES dbo.TipoFuncionario(Id)
+);
+GO
+
+-- Índices para consultas frequentes
+CREATE INDEX IX_Funcionario_CargoId            ON dbo.Funcionario(CargoId);
+CREATE INDEX IX_Funcionario_SetorId            ON dbo.Funcionario(SetorId);
+CREATE INDEX IX_Funcionario_TipoFuncionarioId  ON dbo.Funcionario(TipoFuncionarioId);
+CREATE INDEX IX_Funcionario_Ativo              ON dbo.Funcionario(Ativo);
+CREATE INDEX IX_Funcionario_Nome               ON dbo.Funcionario(Nome);
 GO

@@ -1,7 +1,4 @@
-﻿using Core.Models.PaginateAggregate.Filters;
-using System.Data.Common;
-
-namespace Data.Repositories;
+﻿namespace Data.Repositories;
 
 public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepository
 {
@@ -150,7 +147,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         return rows > 0;
     }
 
-    public async Task<ListaPaginada<OrdemServico>> PaginatedGetAsync(OrdemServicoFilter filter, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public async Task<ListaPaginada<OrdemServicoList>> PaginatedGetAsync(OrdemServicoFilter filter, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
@@ -158,8 +155,11 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
             SELECT
                 OS.*,
                 R.Descricao AS Regiao,
+                ES.Nome AS Estacao,
+                ES.Endereco AS Endereco,
                 A.Descricao AS Agendamento,
-                S.Descricao AS Status
+                S.Descricao AS Status,
+                MC.Descricao AS MotivoCancelamento
             FROM OrdemServico OS
             LEFT JOIN Regiao R ON R.Id = OS.RegiaoId
             LEFT JOIN Agendamento A ON A.Id = OS.AgendamentoId
@@ -182,8 +182,22 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         var orderBy = filter.OrdenarPor switch
         {
             EOrdemServico.Numero => "OS.Numero",
+            EOrdemServico.Codigo => "OS.DataSolicitacao",
+            EOrdemServico.Estacao => "ES.Nome",
+            EOrdemServico.Endereco => "ES.Endereco",
+            EOrdemServico.Agendamento => "A.Descricao",
+            EOrdemServico.MotivoCancelamento => "MC.Descricao",
+            EOrdemServico.TipoOS => "OS.TipoOS",
+            EOrdemServico.Prioridade => "OS.Prioridade",
             EOrdemServico.DataSolicitacao => "OS.DataSolicitacao",
-            EOrdemServico.Status => "OS.StatusId",
+            EOrdemServico.DataAgendamento => "OS.DataAgendamento",
+            EOrdemServico.DataCancelamento => "OS.DataCancelamento",
+            EOrdemServico.DataDespacho => "OS.DataDespacho",
+            EOrdemServico.DataDespachoProgramado => "OS.DataDespachoProgramado",
+            EOrdemServico.DataFinalizacao => "OS.DataFinalizacao",
+            EOrdemServico.DataParalisacao => "OS.DataParalisacao",
+            EOrdemServico.DataInicioExecucao => "OS.DataInicioExecucao",
+            EOrdemServico.Status => "S.Descricao",
             _ => "OS.Numero"
         };
 
@@ -201,7 +215,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         builder.Parameters.Add("@Pagina", filter.Pagina);
         builder.Parameters.Add("@ItensPagina", filter.ItensPagina);
 
-        var lista = await connection.QueryAsync<OrdemServico>(
+        var lista = await connection.QueryAsync<OrdemServicoList>(
             new CommandDefinition(query, builder.Parameters, transaction, cancellationToken: cancellationToken)
         );
 
@@ -211,7 +225,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
 
         var paginas = Math.Max(1, (int)Math.Ceiling(total / (double)filter.ItensPagina));
 
-        return new ListaPaginada<OrdemServico>
+        return new ListaPaginada<OrdemServicoList>
         {
             Lista = lista.AsList(),
             Paginas = paginas,
@@ -367,6 +381,24 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
             new CommandDefinition(query, builder.Parameters, transaction, cancellationToken: cancellationToken)
         );
         return lista;
+    }
+
+    public async Task<bool> CancelarOrdemServicoAsync(Guid id, Guid motivoCancelamentoId, string observacao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            UPDATE OrdemServico 
+            SET DataCancelamento = @DataCancelamento, 
+            MotivoCancelamentoId = @MotivoCancelamentoId, 
+            Observacao = CASE WHEN OBSERVACAO LIKE '' THEN @Observacao ELSE Observacao + '<BR><BR>' + @Observacao END, 
+            StatusId = @StatusId
+            WHERE Id = @Id
+        ";
+
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
+            new { Id = id, DataCancelamento = DateTime.Now, MotivoCancelamentoId = motivoCancelamentoId, Observacao = observacao, StatusId = Constantes.OrdemServicoStatusCancelada }, transaction, cancellationToken: cancellationToken));
+        return rows > 0;
     }
 
     private static void AplicarFiltros(SqlQueryBuilder builder, OrdemServicoFilter filtro)

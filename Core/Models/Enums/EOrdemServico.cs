@@ -3,6 +3,20 @@
 public enum EOrdemServico
 {
     Numero,
+    Codigo,
+    Estacao,
+    Endereco,
+    Agendamento,
+    MotivoCancelamento,
+    TipoOS,
+    Prioridade,
+    DataAgendamento,
+    DataCancelamento,
+    DataDespacho,
+    DataDespachoProgramado,
+    DataFinalizacao,
+    DataParalisacao,
+    DataInicioExecucao,
     DataSolicitacao,
     Status
 }

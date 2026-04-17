@@ -216,6 +216,34 @@ let data = {
                 }
               ]
             },
+            {
+              id: "0e6b00f1-b2b9-4aaa-b1cc-242136f03cc4",
+              moduloId: "bc728d1d-c586-45d1-a49e-5445add6fbdb",
+              descricao: "Motivo Cancelamento",
+              url: "/motivos-cancelamento",
+              ordenacao: 5,
+              ativo: true,
+              exibirMenu: true,
+              ativoFormatado: "Ativo",
+              permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesPerfil: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesUsuario: [
+                {
+                  id: "790a5cbf-aa46-4fdf-a080-14b9b26a4ce7",
+                  usuarioId: "275f7e8d-93d6-4065-8f48-2ad83b8feedd",
+                  telaId: "0e6b00f1-b2b9-4aaa-b1cc-242136f03cc4",
+                  permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+                  dataAtribuicao: "2026-04-01T10:35:53.07",
+                  dataInicio: "2026-04-01T00:00:00",
+                  dataExpiracao: "2027-04-01T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "01/04/2026",
+                  dataInicioFormatada: "01/04/2026",
+                  dataExpiracaoFormatada: "01/04/2027"
+                }
+              ]
+            },
           ]
         },
         {

@@ -1,4 +1,6 @@
-﻿namespace API.Controllers;
+﻿using System.Resources;
+
+namespace API.Controllers;
 
 [ApiController]
 [Route("ordem-servico")]
@@ -116,4 +118,25 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
             return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
         }
     }
+
+    [HttpPatch("cancelar")]
+    public async Task<IActionResult> CancelarOrdemServicoAsync(CancelamentoDto cancelamento, CancellationToken cancellationToken)
+    {
+        try
+        {
+            bool result = await service.CancelarOrdemServicoAsync(cancelamento.OrdemServicoId, cancelamento.MotivoCancelamentoId, cancelamento.Observacao, cancellationToken);
+
+            if (!result)
+                return NotFound(new ErrorMessage("Registro não encontrado.", cancelamento.OrdemServicoId));
+
+            return Ok(new ErrorMessage("Ordem de serviço cancelada com sucesso.", cancelamento.OrdemServicoId));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao cancelar a ordem de serviço.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    public sealed record CancelamentoDto(Guid OrdemServicoId, Guid MotivoCancelamentoId, string Observacao);
 }

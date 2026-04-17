@@ -6,6 +6,7 @@ import Paginacao from '@/components/common/PaginacaoComponent.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import { useRouter } from 'vue-router'
 import OrdemServicoService from '@/services/ordem-servico/ordem-servico-service'
+import MotivoCancelamentoService from '@/services/configuracoes/motivo-cancelamento-service'
 import Loading from '@/components/base/LoadingOverlay.vue'
 import Snackbar from '@/components/base/Snackbar.vue'
 
@@ -15,6 +16,13 @@ const chaveSeguranca = inject('chaveSeguranca')
 const usuarioSeguranca = inject('usuarioSeguranca')
 
 const ordemServicoService = new OrdemServicoService(
+  endpoint,
+  headerPadrao,
+  chaveSeguranca,
+  usuarioSeguranca
+)
+
+const motivoCancelamentoService = new MotivoCancelamentoService(
   endpoint,
   headerPadrao,
   chaveSeguranca,
@@ -48,7 +56,7 @@ const sucesso = ref(true)
 const retorno = ref(null)
 
 // filter modal inputs
-const filtrosLocal = ref({ numero: null, todos: null })
+const filtrosLocal = ref({ numero: null, todos: null, ordenarPor: 'Codigo', ordem: 'Asc' })
 
 // iniciar dialog
 const iniciarDialog = ref(false)
@@ -64,7 +72,9 @@ const devolucaoObservacao = ref('')
 
 // cancelar dialog
 const cancelDialog = ref(false)
+const cancelamentoMotivoId = ref(null)
 const cancelamentoObservacao = ref('')
+const listaMotivosCancelamento = ref([])
 
 // despacho programado dialog
 const despachoDialog = ref(false)
@@ -219,20 +229,31 @@ function getOpcoesAcoesRegistro() {
   ]
 }
 
-const fields = computed(() => [
-  { descricao: 'Nº O.S.', valor: 'codigo', tipo: 'texto', filtravel: false, ordenado: null },
-  { descricao: 'Data', valor: 'dataFormatada', tipo: 'texto', filtravel: false, ordenado: null },
-  { descricao: 'Status', valor: 'status', tipo: 'texto', filtravel: false, ordenado: null },
-  {
-    descricao: 'Ações',
-    valor: 'ellipsis',
-    tipo: 'menu',
-    filtravel: false,
-    ordenado: null,
-    class: 'text-left',
-    opcoesMenu: getOpcoesAcoesRegistro(),
-  },
-])
+function getEstadoOrdenacaoColuna(campoOrdenacao) {
+  const campoAtual = props.filtrosGlobais?.ordenarPor || 'Codigo'
+
+  if (campoAtual !== campoOrdenacao) return null
+
+  return (props.filtrosGlobais?.ordem || 'Asc') !== 'Desc'
+}
+
+const fields = computed(() => {
+  const cols = [
+    { descricao: 'Nº O.S.', valor: 'codigo', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Codigo'), campoOrdenacao: 'Codigo' },
+    { descricao: 'Ações', valor: 'ellipsis', tipo: 'menu', filtravel: false, ordenado: null, class: 'text-left', desabilitarOrdenacao: true, opcoesMenu: getOpcoesAcoesRegistro() },
+    { descricao: 'Endereço', valor: 'endereco', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Endereco'), campoOrdenacao: 'Endereco' },
+    { descricao: 'Prioridade', valor: 'prioridadeDescricao', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Prioridade'), campoOrdenacao: 'Prioridade' },
+    { descricao: 'Data Solicitação', valor: 'dataSolicitacaoFormatada', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('DataSolicitacao'), campoOrdenacao: 'DataSolicitacao' },
+    { descricao: 'Status', valor: 'status', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Status'), campoOrdenacao: 'Status' },
+  ]
+
+  if (!props.readonly) {
+    cols.unshift({ descricao: '', valor: 'selecionado', tipo: 'checkbox', filtravel: false, ordenado: null, selecionado: null, })
+  }
+
+  return cols
+})
+
 
 // ── fetch ─────────────────────────────────────────────────────────────────────
 const router = useRouter()
@@ -244,7 +265,7 @@ async function listarItens() {
   emit('carregarTab')
 
   const filtros = {
-    ...props.filtrosGlobais,
+    ...filtrosLocal.value,
     statusId: props.statusOrdemServicoId ? [props.statusOrdemServicoId] : [],
     pagina: props.tabState?.pagina || 1,
     itensPagina: props.tabState?.itensPagina || 10,
@@ -254,10 +275,7 @@ async function listarItens() {
   loading.value = false
 
   if (result?.statusCode === 200) {
-    const listaFormatada = (result?.data?.data?.lista || []).map(x => ({
-      ...x,
-      dataFormatada: new Date(x.dataSolicitacao).toLocaleDateString('pt-BR'),
-    }))
+    const listaFormatada = result?.data?.data?.lista || []
 
     emit('atualizarTabState', {
       lista: listaFormatada,
@@ -284,8 +302,11 @@ watch(
   isLoading => { if (isLoading && !props.tabState?.loaded && !loading.value) listarItens() }
 )
 
-onMounted(() => {
+onMounted(async () => {
   if (props.tabState && !props.tabState.loaded) listarItens()
+
+  const respMotivos = await motivoCancelamentoService.buscarTodos()
+  if (respMotivos?.statusCode === 200) listaMotivosCancelamento.value = respMotivos.data?.data || []
 })
 
 // ── pagination ────────────────────────────────────────────────────────────────
@@ -302,12 +323,14 @@ function filtrar() {
   emit('aplicarFiltrosGlobais', {
     numero: filtrosLocal.value.numero || null,
     todos: filtrosLocal.value.todos || null,
+    ordenarPor: filtrosLocal.value.ordenarPor || null,
+    ordem: filtrosLocal.value.ordem || null,
   })
   modalFilter.value = false
 }
 
 function limparFiltro() {
-  filtrosLocal.value = { numero: null, todos: null }
+  filtrosLocal.value = { numero: null, todos: null, ordenarPor: null, ordem: null }
 }
 
 // ── form resets ───────────────────────────────────────────────────────────────
@@ -323,6 +346,7 @@ function resetDevolucaoForm() {
 }
 
 function resetCancelamentoForm() {
+  cancelamentoMotivoId.value = null
   cancelamentoObservacao.value = ''
 }
 
@@ -528,6 +552,13 @@ async function confirmarCancelamentoOrdemServico() {
     return
   }
 
+  if (!cancelamentoMotivoId.value) {
+    mensagemRetorno.value = 'Informe o motivo do cancelamento.'
+    sucesso.value = false
+    retorno.value = true
+    return
+  }
+
   if (!cancelamentoObservacao.value?.trim()) {
     mensagemRetorno.value = 'Informe a observação do cancelamento.'
     sucesso.value = false
@@ -543,7 +574,8 @@ async function confirmarCancelamentoOrdemServico() {
   try {
     for (const ordem of ordensParaCancelar) {
       const respostaCancelamento = await ordemServicoService.cancelarOrdemServico({
-        id: ordem.id,
+        ordemServicoId: ordem.id,
+        motivoCancelamentoId: cancelamentoMotivoId.value,
         observacao: cancelamentoObservacao.value.trim(),
       })
 
@@ -722,6 +754,34 @@ function handleCustomButtonClick(payload) {
     return
   }
 }
+
+function alterarOrdenacao(evento) {
+  const idx = Number(evento?.ordenarPor ?? 0)
+  let col = fields.value[idx]
+
+  if (
+    idx === 0 &&
+    ['checkbox', 'menu', 'switch', 'botao'].includes(col?.tipo) &&
+    props.filtrosGlobais?.ordenarPor
+  ) {
+    filtrosLocal.value.ordenarPor = 'Codigo';
+    filtrosLocal.value.ordem = 'Asc';
+    filtrar()
+    listarItens();
+    return
+  }
+
+  if (!col || col.desabilitarOrdenacao) return
+
+  const fallback = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Codigo')
+  const campoApi = col.campoOrdenacao ?? fallback(col.valor)
+  const ordemApi = Number(evento?.ordem) === 1 ? 'Desc' : 'Asc'
+
+  filtrosLocal.value.ordenarPor = campoApi;
+  filtrosLocal.value.ordem = ordemApi;
+  filtrar()
+  listarItens();
+}
 </script>
 
 <template>
@@ -734,13 +794,14 @@ function handleCustomButtonClick(payload) {
       gridType="responsive"
       filterType="popup"
       gridOverflow="horizontal"
-      :gridResizable="false"
+      :gridResizable="true"
       :hasCheckbox="true"
       :customButtonsList="customButtonsList"
       @listarItens="listarItens"
       @botaoOpcaoClick="handleOptionClick"
       @customButtonClick="handleCustomButtonClick"
       @abrirFiltro="modalFilter = true"
+      @alterarOrdenacao="alterarOrdenacao"
     />
     <Paginacao
       :totalPaginas="totalPaginas"
@@ -992,6 +1053,10 @@ function handleCustomButtonClick(payload) {
           <p v-else class="mb-4">
             Cancelar a O.S. <strong>{{ currentItem.codigo }}</strong>?
           </p>
+          <v-autocomplete v-model="cancelamentoMotivoId" :items="listaMotivosCancelamento" item-title="descricao"
+            item-value="id" label="Motivo do cancelamento" variant="outlined" clearable density="comfortable"
+            hide-details class="mb-4" />
+
           <v-textarea
             v-model="cancelamentoObservacao"
             label="Observação do cancelamento"

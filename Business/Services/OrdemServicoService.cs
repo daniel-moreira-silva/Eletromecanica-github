@@ -65,7 +65,7 @@ public class OrdemServicoService(DbConnection connection,
     public async Task<bool> UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken)
         => await repository.UpdateAsync(ordemServico, cancellationToken: cancellationToken);
 
-    public async Task<ListaPaginada<OrdemServico>> PaginatedGetAsync(OrdemServicoFilter filtro, CancellationToken cancellationToken)
+    public async Task<ListaPaginada<OrdemServicoList>> PaginatedGetAsync(OrdemServicoFilter filtro, CancellationToken cancellationToken)
         => await repository.PaginatedGetAsync(filtro, cancellationToken: cancellationToken);
 
     public async Task<IEnumerable<OrdemServico>> BuscarPorEnderecoAsync(string endereco, CancellationToken cancellationToken)
@@ -105,4 +105,7 @@ public class OrdemServicoService(DbConnection connection,
 
     public async Task<IEnumerable<ListaCountOrdemServico>> ListaCountOrdemServicoAsync(OrdemServicoFilter filtro, CancellationToken cancellationToken)
         => await repository.ListaCountOrdemServicoAsync(filtro, cancellationToken: cancellationToken);
+
+    public async Task<bool> CancelarOrdemServicoAsync(Guid id, Guid motivoCancelamentoId, string observacao, CancellationToken cancellationToken)
+        => await repository.CancelarOrdemServicoAsync(id, motivoCancelamentoId, observacao, cancellationToken: cancellationToken);
 }

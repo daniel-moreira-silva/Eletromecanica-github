@@ -39,6 +39,11 @@ const routes = [
     component: () => import('@/views/configuracoes/ServicoExecutado.vue')
   },
   {
+    path: '/motivos-cancelamento',
+    name: 'MotivosCancelamento',
+    component: () => import('@/views/configuracoes/MotivoCancelamento.vue')
+  },
+  {
     path: '/ocorrencia-tabs',
     name: 'OcorrenciaTabs',
     component: () => import('@/views/OrdemServicoTabs.vue')

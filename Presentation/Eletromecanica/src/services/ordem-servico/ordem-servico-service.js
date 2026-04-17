@@ -53,7 +53,7 @@ class OrdemServicoService extends FetchService {
 
   async cancelarOrdemServico(obj) {
     const route = `${this.endpoint}ordem-servico/cancelar`
-    return await this.fetchResponse('POST', this.headerPadrao, obj, false, route, true)
+    return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
   }
 
   async despacharOrdemServico(obj) {
