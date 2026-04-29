@@ -622,22 +622,18 @@ defineExpose({
                 </template>
 
                 <v-list>
-                  <div v-if="!hasCustomOptionsItem">
-                    <v-list-item v-for="(opcao, index) in field.opcoesMenu" :key="index"
-                      @click="optionButtonClick(item, opcao)">
-                      <v-list-item-title :class="opcao.classe">
+                  <v-list-item
+                    v-for="(opcao, index) in (item.opcoesMenu || field.opcoesMenu)"
+                    :key="index"
+                    @click="optionButtonClick(item, opcao)"
+                  >
+                    <template #title>
+                      <span :class="opcao.classe" class="d-flex align-center">
                         <font-awesome-icon :icon="opcao.icone" :class="['mx-1', opcao.classe]" />
-                        {{ opcao.descricao }}</v-list-item-title>
-                    </v-list-item>
-                  </div>
-                  <div v-if="hasCustomOptionsItem">
-                    <v-list-item v-for="(opcao, index) in item.opcoesMenu" :key="index"
-                      @click="optionButtonClick(item, opcao)">
-                      <v-list-item-title :class="opcao.classe">
-                        <font-awesome-icon :icon="opcao.icone" :class="['mx-1', opcao.classe]" />
-                        {{ opcao.descricao }}</v-list-item-title>
-                    </v-list-item>
-                  </div>
+                        {{ opcao.descricao }}
+                      </span>
+                    </template>
+                  </v-list-item>
                 </v-list>
               </v-menu>
 

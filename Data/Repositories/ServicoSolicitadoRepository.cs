@@ -37,11 +37,7 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
         const string sql = @"
-            SELECT
-                Id,
-                Codigo,
-                Descricao,
-                Ativo
+            SELECT *
             FROM ServicoSolicitado
             WHERE Id = @Id;
         ";
@@ -153,7 +149,7 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
         const string sql = @"
-            SELECT Id, Codigo, Descricao, Ativo
+            SELECT *
             FROM ServicoSolicitado
             WHERE Ativo = 1;
         ";
@@ -167,11 +163,7 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
         const string sql = @"
-            SELECT
-                Id,
-                Codigo,
-                Descricao,
-                Ativo
+            SELECT *
             FROM ServicoSolicitado
             JOIN OrdemServicoServicoSolicitado SS ON SS.ServicoSolicitadoId = ServicoSolicitado.Id
             WHERE SS.OrdemServicoId = @Id;
@@ -209,6 +201,20 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         ";
 
         var result = await connection.QueryAsync<ServicoSolicitado>(new CommandDefinition(sql, new { RegraId = id }, transaction, cancellationToken: cancellationToken));
+        return result.AsList();
+    }
+
+    public async Task<List<ServicoSolicitado>> GetAllByIdListAsync(List<Guid> ids, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            SELECT *
+            FROM ServicoSolicitado
+            WHERE Id IN @Ids;
+        ";
+
+        var result = await connection.QueryAsync<ServicoSolicitado>(new CommandDefinition(sql, new { ids }, transaction, cancellationToken: cancellationToken));
         return result.AsList();
     }
 }

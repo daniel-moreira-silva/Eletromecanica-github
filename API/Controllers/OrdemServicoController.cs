@@ -119,6 +119,63 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         }
     }
 
+    [HttpPatch("iniciar")]
+    public async Task<IActionResult> IniciarOrdemServicoAsync(IniciarDto iniciar, CancellationToken cancellationToken)
+    {
+        try
+        {
+            bool result = await service.IniciarOrdemServicoAsync(iniciar.OrdemServicoId, iniciar.FuncionarioId, cancellationToken);
+
+            if (!result)
+                return NotFound(new ErrorMessage("Registro não encontrado.", iniciar.OrdemServicoId));
+
+            return Ok(new ErrorMessage("Ordem de serviço iniciada com sucesso.", iniciar.OrdemServicoId));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao iniciar a ordem de serviço.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpPatch("devolver")]
+    public async Task<IActionResult> DevolverOrdemServicoAsync(DevolverDto devolver, CancellationToken cancellationToken)
+    {
+        try
+        {
+            bool result = await service.DevolverOrdemServicoAsync(devolver.OrdemServicoId, devolver.ObservacaoDevolucao, cancellationToken);
+
+            if (!result)
+                return NotFound(new ErrorMessage("Registro não encontrado.", devolver.OrdemServicoId));
+
+            return Ok(new ErrorMessage("Ordem de serviço devolvida com sucesso.", devolver.OrdemServicoId));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao devolver a ordem de serviço.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpPatch("despachar")]
+    public async Task<IActionResult> DespacharOrdemServicoAsync(DespacharDto despachar, CancellationToken cancellationToken)
+    {
+        try
+        {
+            bool result = await service.DespacharOrdemServicoAsync(despachar.OrdemServicoId, despachar.FuncionarioId, despachar.DataDespachoProgramado, cancellationToken);
+
+            if (!result)
+                return NotFound(new ErrorMessage("Registro não encontrado.", despachar.OrdemServicoId));
+
+            return Ok(new ErrorMessage("Ordem de serviço despachada com sucesso.", despachar.OrdemServicoId));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao despachar a ordem de serviço.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
     [HttpPatch("cancelar")]
     public async Task<IActionResult> CancelarOrdemServicoAsync(CancelamentoDto cancelamento, CancellationToken cancellationToken)
     {
@@ -139,4 +196,7 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
     }
 
     public sealed record CancelamentoDto(Guid OrdemServicoId, Guid MotivoCancelamentoId, string Observacao);
+    public sealed record IniciarDto(Guid OrdemServicoId, Guid FuncionarioId);
+    public sealed record DespacharDto(Guid OrdemServicoId, Guid FuncionarioId, DateTime DataDespachoProgramado);
+    public sealed record DevolverDto(Guid OrdemServicoId, string ObservacaoDevolucao);
 }

@@ -5,6 +5,7 @@ public enum EOrdemServico
     Numero,
     Codigo,
     Estacao,
+    Funcionario,
     Endereco,
     Agendamento,
     MotivoCancelamento,

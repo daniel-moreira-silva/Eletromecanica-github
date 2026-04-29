@@ -18,7 +18,7 @@ public class OrdemServicoDto
     public Guid? RegiaoId { get; set; }
     public string? Regiao { get; set; } = default!;
     public ETipoOS TipoOS { get; set; }
-    public EPrioridadeOS Prioridade { get; set; }
+    public EPrioridade Prioridade { get; set; }
     public string? Email { get; set; }
     public string? Nome { get; set; }
     public string? Telefone { get; set; }

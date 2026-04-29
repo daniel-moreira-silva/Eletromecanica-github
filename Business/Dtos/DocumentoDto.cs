@@ -8,7 +8,13 @@ public class DocumentoDto
     public string MimeType { get; set; } = default!;
     public decimal TamanhoBytes { get; set; }
     public DateTime DataCriacao { get; set; }
+    public string DataCriacaoFormatada { get { return DataCriacao.ToBrazilianFormat(); } }
+    public string? Descricao { get; set; }
+    public bool? Publico { get; set; }
+    public int? Ordem { get; set; }
+    public string? Caminho { get; set; }
     public List<TagDocumento> Tags { get; set; } = [];
+
     public static implicit operator DocumentoDto(Documento document)
     {
         var mime = string.IsNullOrWhiteSpace(document.MimeType) ? "application/octet-stream" : document.MimeType;
@@ -21,6 +27,27 @@ public class DocumentoDto
             MimeType = mime,
             TamanhoBytes = document.TamanhoBytes,
             DataCriacao = document.DataCriacao,
+            Publico = document.Publico,
+            Ordem = document.Ordem,
+            Caminho = document.CaminhoRelativo,
+            Descricao = document.Descricao,
+        };
+    }
+
+    public static implicit operator Documento(DocumentoDto dto)
+    {
+        return new Documento
+        {
+            Id = dto.Id,
+            NomeOriginal = dto.NomeOriginal,
+            Extensao = dto.Extensao,
+            MimeType = dto.MimeType,
+            TamanhoBytes = (long)dto.TamanhoBytes,
+            DataCriacao = dto.DataCriacao,
+            Publico = dto.Publico ?? true,
+            Ordem = dto.Ordem,
+            CaminhoRelativo = dto.Caminho ?? string.Empty,
+            Descricao = dto.Descricao,
         };
     }
 }

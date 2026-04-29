@@ -11,6 +11,8 @@ public class OrdemServicoList
     public int? Ano { get; set; }
     public Guid EstacaoId { get; set; }
     public string Estacao { get; set; } = default!;
+    public Guid FuncionarioId { get; set; }
+    public string Funcionario { get; set; } = default!;
     public string Endereco { get; set; } = default!;
     public Guid? AgendamentoId { get; set; }
     public string? Agendamento { get; set; } = default!;
@@ -22,7 +24,7 @@ public class OrdemServicoList
     public string? Regiao { get; set; } = default!;
     public ETipoOS TipoOS { get; set; }
     public string TipoOSDescricao => TipoOS.GetDescription();
-    public EPrioridadeOS Prioridade { get; set; }
+    public EPrioridade Prioridade { get; set; }
     public string PrioridadeDescricao => Prioridade.GetDescription();
     public string? Email { get; set; }
     public string? Nome { get; set; }
@@ -48,6 +50,8 @@ public class OrdemServicoList
     //public string? DataPrevistaFormatada { get; set; }
     public decimal? CustoTotal { get; set; }   // custo acumulado
     public string? Observacao { get; set; }
+    public string? ObservacaoDevolucao { get; set; }
+    public string? ObservacaoEncerramento { get; set; }
     public bool IsAgendada { get; set; }
     public bool IsProgramada { get; set; }
     public string? Situacao { get { return IsAgendada == true ? "Agendada" : IsProgramada == true ? "Programada" : "Emergencial"; } }

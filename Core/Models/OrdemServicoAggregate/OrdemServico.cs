@@ -8,6 +8,7 @@ public class OrdemServico
     public int? SubOS { get; set; }
     public int? Ano { get; set; }
     public Guid EstacaoId { get; set; }
+    public Guid FuncionarioId { get; set; }
     public Guid? AgendamentoId { get; set; }
     public string? Agendamento { get; set; } = default!;
     public Guid StatusId { get; set; }
@@ -17,7 +18,7 @@ public class OrdemServico
     public Guid? RegiaoId { get; set; }
     public string? Regiao { get; set; } = default!;
     public ETipoOS TipoOS { get; set; }
-    public EPrioridadeOS Prioridade { get; set; }
+    public EPrioridade Prioridade { get; set; }
     public string? Email { get; set; }
     public string? Nome { get; set; }
     public string? Telefone { get; set; }
@@ -30,9 +31,10 @@ public class OrdemServico
     public DateTime? DataParalisacao { get; set; }
     public DateTime DataSolicitacao { get; set; }
     public DateTime? DataInicioExecucao { get; set; }
-    public DateTime? DataPrevista { get; set; }   // prazo de conclusão
     public decimal? CustoTotal { get; set; }   // custo acumulado
     public string? Observacao { get; set; }
+    public string? ObservacaoDevolucao { get; set; }
+    public string? ObservacaoEncerramento { get; set; }
     public bool IsAgendada { get; set; }
     public List<OrdemServicoServicoSolicitado>? ServicosSolicitados { get; set; }
     public List<OrdemServicoEquipamento>? Equipamentos { get; set; }

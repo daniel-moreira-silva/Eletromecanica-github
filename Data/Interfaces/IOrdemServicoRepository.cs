@@ -16,4 +16,7 @@ public interface IOrdemServicoRepository
     Task<Guid> AddOrdemServicoEquipamentoAsync(OrdemServicoEquipamento ordemServicoEquipamento, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<ListaCountOrdemServico>> ListaCountOrdemServicoAsync(OrdemServicoFilter filtro, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<bool> CancelarOrdemServicoAsync(Guid id, Guid motivoCancelamentoId, string observacao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<bool> DespacharOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, DateTime dataDespachoProgramado, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
 }

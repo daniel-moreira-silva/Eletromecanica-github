@@ -5,18 +5,26 @@ class DocumentoService extends FetchService {
     super(endpoint, headerPadrao, chaveSeguranca, usuarioSeguranca)
   }
 
-  async adicionarDocumento(form) {
+    async adicionarDocumento(form) {
         const route = `${this.endpoint}documentos/adicionarDocumento`;
         return await this.fetchResponse("POST", this.headerPadrao, form, false, route, true);
     }
+
     async atualizarDocumento(obj) {
         const route = `${this.endpoint}documentos/atualizarDocumento`;
         return await this.fetchResponse("PUT", this.headerPadrao, obj, false, route, true);
     }
+
+    async atualizarOrdemDocumento(obj) {
+        const route = `${this.endpoint}documentos/atualizar-documento/ordem`
+        return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
+    }
+
     async excluirDocumento(id) {
         const route = `${this.endpoint}documentos/excluirDocumento?id=${id}`;
         return await this.fetchResponse("DELETE", this.headerPadrao, null, false, route, true);
     }
+
     async listarDocumentosPorEntidade(entidadeId) {
         const route = `${this.endpoint}documentos/listarDocumentosPorEntidade?entidadeId=${entidadeId}`;
         return await this.fetchResponse("GET", this.headerPadrao, null, false, route, true);

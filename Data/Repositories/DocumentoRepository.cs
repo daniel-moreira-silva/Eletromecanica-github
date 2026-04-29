@@ -8,25 +8,14 @@ public class DocumentoRepository(DbConnection connection) : IDocumentoRepository
 
         const string sql = @"
             SELECT
-                d.Id,
-                d.NomeOriginal,
-                d.NomeArmazenado,
-                d.Extensao,
-                d.MimeType,
-                CAST(d.TamanhoBytes AS decimal(18, 0)) AS TamanhoBytes,
-                d.CaminhoRelativo,
-                d.HashSHA256,
-                d.Tipo,
-                d.Descricao,
-                d.DataCriacao,
-                d.CriadoPor,
-                d.Ativo
-            FROM dbo.DocumentoVinculo dv
-            INNER JOIN dbo.Documento d ON d.Id = dv.DocumentoId
+                d.*,
+                CAST(d.TamanhoBytes AS decimal(18, 0)) AS TamanhoBytes
+            FROM dbo.Documento d
+            INNER JOIN dbo.DocumentoVinculo dv ON d.Id = dv.DocumentoId
             WHERE
                 dv.EntidadeId = @EntidadeId
                 AND d.Ativo = 1
-            ORDER BY d.DataCriacao DESC;
+            ORDER BY d.Ordem, d.DataCriacao ASC
         ";
 
         var rows = await connection.QueryAsync<Documento>(new CommandDefinition(sql, new { entidadeId }, transaction, cancellationToken: cancellationToken));
@@ -39,19 +28,8 @@ public class DocumentoRepository(DbConnection connection) : IDocumentoRepository
 
         const string sql = @"
             SELECT
-                d.Id,
-                d.NomeOriginal,
-                d.NomeArmazenado,
-                d.Extensao,
-                d.MimeType,
-                CAST(d.TamanhoBytes AS decimal(18, 0)) AS TamanhoBytes,
-                d.CaminhoRelativo,
-                d.HashSHA256,
-                d.Tipo,
-                d.Descricao,
-                d.DataCriacao,
-                d.CriadoPor,
-                d.Ativo
+                d.*,
+                CAST(d.TamanhoBytes AS decimal(18, 0)) AS TamanhoBytes
             FROM dbo.Documento d
             WHERE d.Id = @Id;
         ";
@@ -77,7 +55,11 @@ public class DocumentoRepository(DbConnection connection) : IDocumentoRepository
                 HashSHA256,
                 Tipo,
                 Descricao,
-                CriadoPor
+                CriadoPor,
+                Prioridade,
+                Ordem,
+                FotoExecucao,
+                Publico
             )
             OUTPUT INSERTED.Id INTO @Inserted(Id)
             VALUES
@@ -91,7 +73,11 @@ public class DocumentoRepository(DbConnection connection) : IDocumentoRepository
                 @HashSHA256,
                 @Tipo,
                 @Descricao,
-                @CriadoPor
+                @CriadoPor,
+                @Prioridade,
+                @Ordem,
+                @FotoExecucao,
+                @Publico
             );
 
             SELECT Id FROM @Inserted;
@@ -129,13 +115,31 @@ public class DocumentoRepository(DbConnection connection) : IDocumentoRepository
         return await connection.ExecuteScalarAsync<Guid>(new CommandDefinition(sql, vinculo, transaction, cancellationToken: cancellationToken));
     }
 
-    public async Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
-        const string sql = @" UPDATE Documento SET NomeOriginal = @NomeOriginal WHERE Id = @Id;";
+        const string sql = @" 
+            UPDATE Documento 
+            SET NomeOriginal = @NomeOriginal,
+                Descricao = @Descricao,
+                Publico = @Publico
+            WHERE Id = @Id;";
 
-        var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { id, nomeOriginal }, transaction, cancellationToken: cancellationToken));
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { id, NomeOriginal = nomeOriginal, Descricao = descricao, Publico = publico }, transaction, cancellationToken: cancellationToken));
+        return rows > 0;
+    }
+
+    public async Task<bool> UpdateOrdemDocumentoAsync(Guid id, int ordem, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @" 
+            UPDATE Documento 
+            SET Ordem = @Ordem
+            WHERE Id = @Id;";
+
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { id, Ordem = ordem }, transaction, cancellationToken: cancellationToken));
         return rows > 0;
     }
 

@@ -15,5 +15,9 @@ public class Documento
     public string? Descricao { get; set; }
     public DateTime DataCriacao { get; set; }
     public string? CriadoPor { get; set; }
+    public bool Prioridade { get; set; }
+    public bool Publico { get; set; }
+    public bool? FotoExecucao { get; set; }
+    public int? Ordem { get; set; }
     public bool Ativo { get; set; }
 }

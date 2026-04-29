@@ -74,12 +74,7 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
         var criadoPor = Request.Headers["Usuario"].ToString();
 
         var document = await service.AdicionarDocumentoAsync(
-            request.EntidadeId,
-            request.EntidadeTipo,
-            request.Arquivo,
-            request.Tipo,
-            request.Descricao,
-            request.ObservacoesVinculo,
+            request,
             criadoPor,
             cancellationToken
         );
@@ -88,11 +83,11 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
     }
 
     [HttpPut("atualizarDocumento")]
-    public async Task<IActionResult> UpdateDocumentoAsync([FromBody] DocumentoDto documento, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateDocumentoAsync([FromBody] AtualizarDocumentoRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await service.UpdateDocumentoAsync(documento.Id, documento.NomeOriginal, cancellationToken);
+            var result = await service.UpdateDocumentoAsync(request.Id, request.NomeOriginal, request.Descricao, request.Publico, cancellationToken);
 
             if (result)
                 return Ok(new SuccessMessage("Documento atualizado com sucesso.", null));
@@ -102,6 +97,25 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
         catch (Exception ex)
         {
             LogError(ex, "Erro ao atualizar documento.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, ex.Message));
+        }
+    }
+
+    [HttpPatch("atualizar-documento/ordem")]
+    public async Task<IActionResult> UpdateOrdemDocumentoAsync([FromBody] List<AtualizarOrdemDocumentoRequest> atualizarOrdemListaDocumento, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.UpdateOrdemDocumentoAsync(atualizarOrdemListaDocumento, cancellationToken);
+
+            if (result)
+                return Ok(new SuccessMessage("Ordem dos documentos atualizado com sucesso.", null));
+            else
+                return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, "Erro ao atualizar documento."));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao atualizar ordem dos documentos.");
             return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO, ex.Message));
         }
     }

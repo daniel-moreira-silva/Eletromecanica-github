@@ -1,4 +1,6 @@
-﻿namespace Data.Repositories;
+﻿using Core.Models.FuncionarioAggregate;
+
+namespace Data.Repositories;
 
 public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepository
 {
@@ -31,7 +33,6 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 DataFinalizacao,
                 DataParalisacao,
                 DataInicioExecucao,
-                DataPrevista,
                 CustoTotal,
                 Observacao
             )
@@ -60,7 +61,6 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 @DataFinalizacao,
                 @DataParalisacao,
                 @DataInicioExecucao,
-                @DataPrevista,
                 @CustoTotal,
                 @Observacao
             );
@@ -99,7 +99,6 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 DataParalisacao = @DataParalisacao,
                 DataSolicitacao = @DataSolicitacao,
                 DataInicioExecucao = @DataInicioExecucao,
-                DataPrevista = @DataPrevista,
                 CustoTotal = @CustoTotal,
                 Observacao = @Observacao
             WHERE Id = @Id;
@@ -127,6 +126,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
             LEFT JOIN StatusOrdemServico s ON s.Id = os.StatusId
             LEFT JOIN MotivoCancelamento mc ON mc.Id = os.MotivoCancelamentoId
             LEFT JOIN Estacao es ON es.Id = os.EstacaoId
+            
             WHERE os.Id = @Id;
         ";
 
@@ -159,13 +159,15 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 ES.Endereco AS Endereco,
                 A.Descricao AS Agendamento,
                 S.Descricao AS Status,
-                MC.Descricao AS MotivoCancelamento
+                MC.Descricao AS MotivoCancelamento,
+                F.Nome AS Funcionario
             FROM OrdemServico OS
             LEFT JOIN Regiao R ON R.Id = OS.RegiaoId
             LEFT JOIN Agendamento A ON A.Id = OS.AgendamentoId
             LEFT JOIN StatusOrdemServico S ON S.Id = OS.StatusId
             LEFT JOIN MotivoCancelamento MC ON MC.Id = OS.MotivoCancelamentoId
             LEFT JOIN Estacao ES ON ES.Id = OS.EstacaoId
+            LEFT JOIN Funcionario F ON F.Id = os.FuncionarioId
         ";
 
         var builder = new SqlQueryBuilder();
@@ -184,6 +186,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
             EOrdemServico.Numero => "OS.Numero",
             EOrdemServico.Codigo => "OS.DataSolicitacao",
             EOrdemServico.Estacao => "ES.Nome",
+            EOrdemServico.Funcionario => "F.Nome",
             EOrdemServico.Endereco => "ES.Endereco",
             EOrdemServico.Agendamento => "A.Descricao",
             EOrdemServico.MotivoCancelamento => "MC.Descricao",
@@ -383,7 +386,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         return lista;
     }
 
-    public async Task<bool> CancelarOrdemServicoAsync(Guid id, Guid motivoCancelamentoId, string observacao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public async Task<bool> CancelarOrdemServicoAsync(Guid ordemServicoId, Guid motivoCancelamentoId, string observacao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
@@ -397,7 +400,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         ";
 
         var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
-            new { Id = id, DataCancelamento = DateTime.Now, MotivoCancelamentoId = motivoCancelamentoId, Observacao = observacao, StatusId = Constantes.OrdemServicoStatusCancelada }, transaction, cancellationToken: cancellationToken));
+            new { Id = ordemServicoId, DataCancelamento = DateTime.Now, MotivoCancelamentoId = motivoCancelamentoId, Observacao = observacao, StatusId = Constantes.OrdemServicoStatusCancelada }, transaction, cancellationToken: cancellationToken));
         return rows > 0;
     }
 
@@ -487,5 +490,60 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 ["@DataCancelamentoInicio"] = filtro.DataCancelamentoInicio.Value,
                 ["@DataCancelamentoFim"]    = filtro.DataCancelamentoFim.Value
             });
+    }
+
+    public async Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            UPDATE OrdemServico 
+            SET DataDespacho = @DataDespacho,
+            FuncionarioId = @FuncionarioId,
+            StatusId = @StatusId
+            WHERE Id = @Id
+        ";
+
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
+            new { Id = ordemServicoId, DataDespacho = DateTime.Now, FuncionarioId = funcionarioId, StatusId = Constantes.OrdemServicoStatusIniciada }, transaction, cancellationToken: cancellationToken));
+        return rows > 0;
+    }
+
+    public async Task<bool> DespacharOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, DateTime dataDespachoProgramado, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            UPDATE OrdemServico 
+            SET DataDespachoProgramado = @DataDespachoProgramado,
+            FuncionarioId = @FuncionarioId,
+            IsProgramada = 1,
+            StatusId = @StatusId
+            WHERE Id = @Id
+        ";
+
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
+            new { Id = ordemServicoId, DataDespacho = DateTime.Now, FuncionarioId = funcionarioId, DataDespachoProgramado = dataDespachoProgramado, StatusId = Constantes.OrdemServicoStatusIniciada }, transaction, cancellationToken: cancellationToken));
+        return rows > 0;
+    }
+
+    public async Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            UPDATE OrdemServico 
+            SET DataDespacho = NULL,
+            DataDespachoProgramado = NULL,
+            FuncionarioId = NULL,
+            IsProgramada = 0,
+            ObservacaoDevolucao = @ObservacaoDevolucao,
+            StatusId = @StatusId
+            WHERE Id = @Id
+        ";
+
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
+            new { Id = ordemServicoId, ObservacaoDevolucao = observacaoDevolucao, StatusId = Constantes.OrdemServicoStatusSolicitada }, transaction, cancellationToken: cancellationToken));
+        return rows > 0;
     }
 }

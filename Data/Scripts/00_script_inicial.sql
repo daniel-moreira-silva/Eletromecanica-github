@@ -344,6 +344,12 @@ CREATE TABLE dbo.Documento (
     Descricao NVARCHAR(500) NULL,
     DataCriacao DATETIME2 NOT NULL CONSTRAINT DF_Documento_DataCriacao DEFAULT SYSDATETIME(),
     CriadoPor NVARCHAR(255) NULL,
+
+    Prioridade BIT NOT NULL CONSTRAINT DF_Documento_Prioridade DEFAULT 0,
+    Publico BIT NOT NULL CONSTRAINT DF_Documento_Publico DEFAULT 0,
+    FotoExecucao BIT NULL,
+    Ordem INT NULL,
+
     Ativo BIT NOT NULL CONSTRAINT DF_Documento_Ativo DEFAULT 1
 );
 GO
@@ -433,6 +439,8 @@ CREATE TABLE dbo.ServicoSolicitado (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_ServicoSolicitado PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
     Codigo NVARCHAR(10) NOT NULL,
     Descricao NVARCHAR(80) NOT NULL,
+    Prioridade TINYINT NOT NULL CONSTRAINT DF_ServicoSolicitado_Prioridade DEFAULT 1, -- 0=Baixa, 1=Media, 2=Alta, 3=Critica
+    Sla INT NOT NULL,
     Ativo BIT NOT NULL CONSTRAINT DF_ServicoSolicitado_Ativo DEFAULT 1,
     CONSTRAINT UQ_ServicoSolicitado_Codigo UNIQUE (Codigo)
 );
@@ -515,6 +523,7 @@ CREATE TABLE dbo.OrdemServico (
     Ano INT NOT NULL CONSTRAINT DF_OrdemServico_Ano DEFAULT YEAR(SYSDATETIME()),
 
     EstacaoId UNIQUEIDENTIFIER NOT NULL,
+    FuncionariolId UNIQUEIDENTIFIER NULL,
 
     AgendamentoId UNIQUEIDENTIFIER NULL,
     StatusId UNIQUEIDENTIFIER NOT NULL,
@@ -544,14 +553,15 @@ CREATE TABLE dbo.OrdemServico (
     DataParalisacao DATETIME2 NULL,
     DataSolicitacao DATETIME2 NOT NULL CONSTRAINT DF_OrdemServico_DataSolicitacao DEFAULT SYSDATETIME(),
     DataInicioExecucao DATETIME2 NULL,
-    DataPrevista DATETIME2 NULL,   -- prazo de conclusão da OS
     CustoTotal DECIMAL(18, 2) NULL,   -- custo acumulado da OS
     Observacao NVARCHAR(MAX) NULL,
+    ObservacaoDevolucao NVARCHAR(MAX) NULL,
+    ObservacaoEncerramento NVARCHAR(MAX) NULL,
 
     -- (Opcional) controle lógico
-    Ativo BIT NOT NULL CONSTRAINT DF_OrdemServico_Ativo DEFAULT 1,
     IsAgendada BIT NULL,
     IsProgramada BIT NULL,
+    Ativo BIT NOT NULL CONSTRAINT DF_OrdemServico_Ativo DEFAULT 1,
 
     CONSTRAINT FK_OrdemServico_Estacao
         FOREIGN KEY (EstacaoId) REFERENCES dbo.Estacao(Id),
@@ -567,6 +577,9 @@ CREATE TABLE dbo.OrdemServico (
 
     CONSTRAINT FK_OrdemServico_Regiao
         FOREIGN KEY (RegiaoId) REFERENCES dbo.Regiao(Id),
+
+    CONSTRAINT FK_OrdemServico_Funcionario
+        FOREIGN KEY (FuncionarioId) REFERENCES dbo.Funcionario(Id),
 
     CONSTRAINT CK_OrdemServico_Datas CHECK
     (

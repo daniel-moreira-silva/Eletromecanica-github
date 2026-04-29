@@ -7,8 +7,10 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import { useRouter } from 'vue-router'
 import OrdemServicoService from '@/services/ordem-servico/ordem-servico-service'
 import MotivoCancelamentoService from '@/services/configuracoes/motivo-cancelamento-service'
+import FuncionarioService from '@/services/configuracoes/funcionario-service'
 import Loading from '@/components/base/LoadingOverlay.vue'
 import Snackbar from '@/components/base/Snackbar.vue'
+import OrdemServicoDocumentos from '@/views/ordem-servico/OrdemServicoDocumentos.vue'
 
 const endpoint = inject('endpoint')
 const headerPadrao = inject('headerPadrao')
@@ -23,6 +25,13 @@ const ordemServicoService = new OrdemServicoService(
 )
 
 const motivoCancelamentoService = new MotivoCancelamentoService(
+  endpoint,
+  headerPadrao,
+  chaveSeguranca,
+  usuarioSeguranca
+)
+
+const funcionarioService = new FuncionarioService(
   endpoint,
   headerPadrao,
   chaveSeguranca,
@@ -64,6 +73,7 @@ const iniciarEmLote = ref(false)
 const ocorrenciasSelecionadasLote = ref([])
 const sendConfirmDialog = ref(false)
 const confirmDialog = ref(false)
+const servicosSolicitados = ref([])
 
 // devolver dialog
 const devolverDialog = ref(false)
@@ -76,24 +86,25 @@ const cancelamentoMotivoId = ref(null)
 const cancelamentoObservacao = ref('')
 const listaMotivosCancelamento = ref([])
 
+// documentos dialog
+const documentosDialog = ref(false)
+const ordemServicoDocumentosAtual = ref(null)
+
 // despacho programado dialog
 const despachoDialog = ref(false)
 const despachoEmLote = ref(false)
-const despachoEquipe = ref(null)
+const despachoFuncionarioId = ref(null)
 const despachoDataHora = ref(null)
 const despachoSelecionados = ref([])
+const searchDespachoFuncionario = ref('')
 
 const currentItem = ref({ id: '', codigo: '', endereco: '', servico: '' })
 const confirmationNumber = ref('')
 
 // equipe / funcionários
-const selectedTeam = ref(null)
-const selectedAdutora = ref(null)
-const teamOptions = ref([])
-const adutoraOptions = ref([])
-const searchEmp = ref('')
-const selectedEmployees = ref([])
+const selectedFuncionarioId = ref(null)
 const listaFuncionarios = ref([])
+const searchFuncionario = ref('')
 
 // ── derived from tabState ─────────────────────────────────────────────────────
 const lista = computed(() => props.tabState?.lista || [])
@@ -106,16 +117,8 @@ const itensPagina = computed(() => props.tabState?.itensPagina || 10)
 const selectedCount = computed(() => lista.value.filter(i => i.selecionado).length)
 const selectedBatchCount = computed(() => (ocorrenciasSelecionadasLote.value || []).length)
 
-const allEmployees = computed(() => listaFuncionarios.value.filter(Boolean))
-const funcionariosFiltrados = computed(() => {
-  const termo = (searchEmp.value || '').toLowerCase().trim()
-  if (!termo) return allEmployees.value
-  return allEmployees.value.filter(e => e.toLowerCase().includes(termo))
-})
 
-const canSend = computed(() =>
-  !!selectedTeam.value && !!selectedAdutora.value && selectedEmployees.value.length > 0
-)
+const canSend = computed(() => !!selectedFuncionarioId.value)
 
 // ── custom buttons (toolbar) ──────────────────────────────────────────────────
 const customButtonsList = computed(() => {
@@ -124,7 +127,8 @@ const customButtonsList = computed(() => {
 
   if (props.status === 'Solicitadas') {
     opcoesMenu = [
-      { descricao: 'Enviar para equipe', icone: 'paper-plane', type: 'send' },
+      { descricao: 'Enviar para funcionario', icone: 'paper-plane', type: 'send' },
+      { descricao: 'Programar despacho', icone: 'calendar-alt', type: 'schedule' },
       { descricao: 'Imprimir selecionado', icone: 'print', type: 'print' },
     ]
   } else if (props.status === 'Distribuídas') {
@@ -180,6 +184,7 @@ function getOpcoesAcoesRegistro() {
       { descricao: 'Iniciar ordem serviço', icone: 'share-square', classe: 'text-left' },
       { descricao: 'Programar ordem serviço', icone: 'calendar-alt', classe: 'text-left' },
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+      { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -189,6 +194,7 @@ function getOpcoesAcoesRegistro() {
     return [
       { descricao: 'Devolver ordem de serviço', icone: 'reply', classe: 'text-left' },
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+      { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -198,6 +204,7 @@ function getOpcoesAcoesRegistro() {
     return [
       { descricao: 'Devolver ordem de serviço', icone: 'reply', classe: 'text-left' },
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+      { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -206,6 +213,7 @@ function getOpcoesAcoesRegistro() {
   if (props.status === 'Pendentes') {
     return [
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+      { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -214,6 +222,7 @@ function getOpcoesAcoesRegistro() {
   if (props.status === 'Finalizadas') {
     return [
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+      { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
     ]
   }
@@ -221,11 +230,13 @@ function getOpcoesAcoesRegistro() {
   if (props.status === 'Canceladas') {
     return [
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+      { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
     ]
   }
 
   return [
     { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
+    { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
   ]
 }
 
@@ -305,8 +316,13 @@ watch(
 onMounted(async () => {
   if (props.tabState && !props.tabState.loaded) listarItens()
 
-  const respMotivos = await motivoCancelamentoService.buscarTodos()
+  const [respMotivos, respFuncionarios] = await Promise.all([
+    motivoCancelamentoService.buscarTodos(),
+    funcionarioService.buscarTodos(),
+  ])
+
   if (respMotivos?.statusCode === 200) listaMotivosCancelamento.value = respMotivos.data?.data || []
+  if (respFuncionarios?.statusCode === 200) listaFuncionarios.value = respFuncionarios.data?.data || []
 })
 
 // ── pagination ────────────────────────────────────────────────────────────────
@@ -335,10 +351,8 @@ function limparFiltro() {
 
 // ── form resets ───────────────────────────────────────────────────────────────
 function resetForm() {
-  selectedTeam.value = null
-  selectedAdutora.value = null
-  searchEmp.value = ''
-  selectedEmployees.value = []
+  selectedFuncionarioId.value = null
+  searchFuncionario.value = ''
 }
 
 function resetDevolucaoForm() {
@@ -351,8 +365,9 @@ function resetCancelamentoForm() {
 }
 
 function resetDespachoForm() {
-  despachoEquipe.value = null
+  despachoFuncionarioId.value = null
   despachoDataHora.value = null
+  searchDespachoFuncionario.value = ''
 }
 
 // ── helper: set currentItem ───────────────────────────────────────────────────
@@ -391,6 +406,7 @@ function closeModal() {
   confirmDialog.value = false
   iniciarEmLote.value = false
   ocorrenciasSelecionadasLote.value = []
+  servicosSolicitados.value = []
   resetForm()
 }
 
@@ -421,8 +437,8 @@ async function confirmSend() {
     return
   }
 
-  if (!selectedTeam.value || !selectedAdutora.value || !selectedEmployees.value.length) {
-    mensagemRetorno.value = 'Preencha equipe, estação e ao menos um funcionário.'
+  if (!selectedFuncionarioId.value) {
+    mensagemRetorno.value = 'Selecione um funcionário para iniciar a ordem de serviço.'
     sucesso.value = false
     retorno.value = true
     return
@@ -436,9 +452,8 @@ async function confirmSend() {
   try {
     for (const ordem of ordensParaEnviar) {
       const respostaIniciar = await ordemServicoService.iniciarOrdemServico({
-        id: ordem.id,
-        equipeId: selectedTeam.value,
-        estacaoId: selectedAdutora.value,
+        ordemServicoId: ordem.id,
+        funcionarioId: selectedFuncionarioId.value,
       })
 
       if (respostaIniciar?.statusCode !== 200) {
@@ -500,7 +515,7 @@ async function confirmarDevolucaoOrdemServico() {
   try {
     for (const ordem of ordensParaDevolver) {
       const respostaDevolucao = await ordemServicoService.devolverOrdemServico({
-        id: ordem.id,
+        ordemServicoId: ordem.id,
         observacaoDevolucao: devolucaoObservacao.value.trim(),
       })
 
@@ -615,8 +630,8 @@ async function confirmarCancelamentoOrdemServico() {
 
 // ── actions: despacho programado ──────────────────────────────────────────────
 async function programarDespacho() {
-  if (!despachoEquipe.value || !despachoDataHora.value) {
-    mensagemRetorno.value = 'Informe a equipe e a data/hora do despacho.'
+  if (!despachoFuncionarioId.value || !despachoDataHora.value) {
+    mensagemRetorno.value = 'Informe o funcionário e a data/hora do despacho.'
     sucesso.value = false
     retorno.value = true
     return
@@ -639,8 +654,8 @@ async function programarDespacho() {
   try {
     for (const ordem of ordensParaDespacho) {
       const respostaDespacho = await ordemServicoService.despacharOrdemServico({
-        id: ordem.id,
-        equipeId: despachoEquipe.value,
+        ordemServicoId: ordem.id,
+        funcionarioId: despachoFuncionarioId.value,
         dataDespachoProgramado: despachoDataHora.value,
       })
 
@@ -675,16 +690,6 @@ async function programarDespacho() {
   }
 }
 
-// ── employee chip removal ─────────────────────────────────────────────────────
-watch(selectedTeam, () => {
-  selectedEmployees.value = []
-  searchEmp.value = ''
-})
-
-function removeEmployee(emp) {
-  selectedEmployees.value = selectedEmployees.value.filter(e => e !== emp)
-}
-
 // ── grid event handlers ───────────────────────────────────────────────────────
 async function handleOptionClick({ item, opcao }) {
   if (opcao.descricao === 'Iniciar ordem serviço') {
@@ -693,6 +698,12 @@ async function handleOptionClick({ item, opcao }) {
     setCurrentItem(item)
     resetForm()
     iniciarDialog.value = true
+    loadingAcao.value = true
+    const detalhes = await ordemServicoService.obterDetalhes(item.id)
+    loadingAcao.value = false
+    if (detalhes?.statusCode === 200) {
+      servicosSolicitados.value = detalhes.data?.data?.servicosSolicitados || []
+    }
   } else if (opcao.descricao === 'Programar ordem serviço') {
     iniciarEmLote.value = false
     ocorrenciasSelecionadasLote.value = []
@@ -717,6 +728,14 @@ async function handleOptionClick({ item, opcao }) {
     retorno.value = true
   } else if (opcao.descricao === 'Detalhar ordem serviço') {
     await router.push({ name: 'DetalharOrdemServico', params: { id: item.id } })
+  } else if (opcao.descricao === 'Documentos da O.S.') {
+    ordemServicoDocumentosAtual.value = {
+      id: item?.id ?? '',
+      codigo: item?.codigo ?? '',
+      endereco: item?.endereco ?? '',
+      servico: item?.servico ?? '',
+    }
+    documentosDialog.value = true
   }
 }
 
@@ -735,6 +754,11 @@ function handleCustomButtonClick(payload) {
     ocorrenciasSelecionadasLote.value = (payload?.selecionados || []).filter(item => !!item?.id)
     resetForm()
     iniciarDialog.value = true
+    return
+  }
+
+  if (opcao?.type === 'schedule' || opcao?.descricao === 'Programar despacho') {
+    abrirDespachoProgramado({ emLote: true, selecionados: (payload?.selecionados || []).filter(item => !!item?.id) })
     return
   }
 
@@ -859,95 +883,69 @@ function alterarOrdenacao(evento) {
     </v-dialog>
 
     <!-- Modal Iniciar O.S. -->
-    <v-dialog v-model="iniciarDialog" max-width="800" height="100%" persistent scrim="rgba(0,0,0,0.7)">
-      <v-card class="pa-4">
-        <v-card-title>
+    <v-dialog v-model="iniciarDialog" max-width="480" persistent scrim="rgba(0,0,0,0.7)">
+      <v-card>
+        <v-card-title class="d-flex align-center pa-4 pb-2">
           <font-awesome-icon icon="play" class="text-primary me-2" />
-          {{ iniciarEmLote ? 'Enviar ordens de serviço para equipe' : 'Iniciar Ordem de Serviço' }}
-          <font-awesome-icon icon="xmark" @click="closeModal" class="text-close float-right icon-clicavel me-2" />
+          <span class="text-h6">{{ iniciarEmLote ? 'Iniciar ordens de serviço' : 'Iniciar Ordem de Serviço' }}</span>
+          <v-spacer />
+          <font-awesome-icon icon="xmark" @click="closeModal" class="text-close icon-clicavel" />
         </v-card-title>
-        <v-divider class="pb-0" />
-        <v-card-text>
-          <p v-if="iniciarEmLote" class="mb-3">
-            <strong>Ordens selecionadas:</strong> {{ selectedBatchCount }}
-          </p>
-          <template v-else>
-            <p class="mb-1"><strong>Nº O.S:</strong> {{ currentItem.codigo }}</p>
-            <p class="mb-1"><strong>Serviço:</strong> {{ currentItem.servico }}</p>
-            <p class="mb-1"><strong>Endereço:</strong> {{ currentItem.endereco }}</p>
-          </template>
-          <v-divider class="mx-2 my-2" />
-          <v-autocomplete
-            v-model="selectedTeam"
-            :items="teamOptions"
-            item-title="descricao"
-            item-value="id"
-            label="Equipe"
-            variant="solo"
-            clearable
-            density="comfortable"
-            single-line
-            hide-details
-            class="selecao-equipe mb-3"
-          />
-          <v-autocomplete
-            v-model="selectedAdutora"
-            :items="adutoraOptions"
-            item-title="descricao"
-            item-value="id"
-            label="Estação"
-            variant="solo"
-            clearable
-            density="comfortable"
-            single-line
-            hide-details
-            class="selecao-equipe"
-          />
-          <v-row class="box-listas" v-if="selectedTeam">
-            <v-col cols="12">
-              <div class="mb-2"><strong>Funcionários</strong></div>
-              <v-text-field
-                v-model="searchEmp"
-                clearable
-                dense
-                variant="underlined"
-                hide-details
-                placeholder="Filtrar funcionários"
-              >
-                <template #prepend-inner>
-                  <font-awesome-icon icon="search" class="text-primary me-2" />
-                </template>
-              </v-text-field>
-              <div class="d-flex flex-wrap gap-2 mb-3">
-                <v-chip
-                  v-for="emp in selectedEmployees"
-                  :key="emp"
-                  closable
-                  @click:close="removeEmployee(emp)"
-                  class="chips-autocomplete"
+        <v-divider />
+        <v-card-text class="pa-4">
+          <div v-if="iniciarEmLote" class="mb-4">
+            <span class="text-body-2">Ordens selecionadas:</span>
+            <strong class="ms-1">{{ selectedBatchCount }}</strong>
+          </div>
+          <div v-else class="mb-4">
+            <div class="d-flex align-center mb-1">
+              <span class="text-body-2 text-medium-emphasis" style="min-width:90px">Nº O.S.:</span>
+              <strong>{{ currentItem.codigo }}</strong>
+            </div>
+            <div class="d-flex align-center mb-2">
+              <span class="text-body-2 text-medium-emphasis" style="min-width:90px">Endereço:</span>
+              <span class="text-body-2">{{ currentItem.endereco }}</span>
+            </div>
+            <div class="mt-1">
+              <span class="text-body-2 text-medium-emphasis d-block mb-1">Serviços solicitados:</span>
+              <div v-if="servicosSolicitados.length" class="d-flex flex-column">
+                <div
+                  v-for="(s, idx) in servicosSolicitados"
+                  :key="idx"
+                  class="d-flex align-center py-2 px-1"
+                  :class="{ 'border-t': idx > 0 }"
+                  style="border-color: rgba(0,0,0,0.08) !important"
                 >
-                  {{ emp }}
-                </v-chip>
+                  <span class="text-primary me-2" style="font-size:10px; flex-shrink:0">●</span>
+                  <span class="text-body-2">{{ s.descricao }}</span>
+                </div>
               </div>
-              <div style="max-height:180px; overflow-y:auto;">
-                <v-checkbox
-                  v-for="emp in funcionariosFiltrados"
-                  :key="emp"
-                  v-model="selectedEmployees"
-                  :value="emp"
-                  :label="emp"
-                  dense
-                  hide-details
-                  class="mb-0"
-                />
-              </div>
-            </v-col>
-          </v-row>
+              <span v-else class="text-body-2 text-medium-emphasis">Nenhum serviço solicitado.</span>
+            </div>
+          </div>
+
+          <v-autocomplete
+            v-model="selectedFuncionarioId"
+            :items="listaFuncionarios"
+            item-title="nome"
+            item-value="id"
+            label="Funcionário responsável"
+            variant="outlined"
+            clearable
+            density="comfortable"
+            hide-details
+            v-model:search="searchFuncionario"
+            no-data-text="Nenhum funcionário encontrado"
+          >
+            <template #prepend-inner>
+              <font-awesome-icon icon="user" class="text-medium-emphasis me-1" />
+            </template>
+          </v-autocomplete>
         </v-card-text>
-        <v-divider class="pb-4" />
-        <v-card-actions class="justify-end">
-          <BaseButton label="Cancelar" type="cancel" @click="closeModal" />
-          <BaseButton label="Enviar O.S." type="save" :disabled="!canSend" @click="prepareConfirmSend" />
+        <v-divider />
+        <v-card-actions class="pa-4 justify-end">
+          <BaseButton label="Cancelar" type="cancel" extraClass="me-2" @click="closeModal" />
+          <BaseButton label="Iniciar O.S." type="save" :disabled="!canSend" @click="prepareConfirmSend" />
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -963,10 +961,10 @@ function alterarOrdenacao(evento) {
         <v-divider class="pb-4" />
         <v-card-text class="pb-4">
           <p v-if="iniciarEmLote">
-            Deseja realmente enviar <strong>{{ selectedBatchCount }}</strong> ordem(ns) de serviço para a equipe selecionada?
+            Deseja realmente enviar <strong>{{ selectedBatchCount }}</strong> ordem(ns) de serviço para o funcionário selecionado?
           </p>
           <p v-else>
-            Deseja realmente enviar a O.S. <strong>{{ confirmationNumber }}</strong> para a equipe selecionada?
+            Deseja realmente enviar a O.S. <strong>{{ confirmationNumber }}</strong> para o funcionário selecionado?
           </p>
         </v-card-text>
         <v-divider class="pb-4" />
@@ -982,14 +980,56 @@ function alterarOrdenacao(evento) {
       <v-card class="pa-2">
         <v-card-title>
           <font-awesome-icon icon="clipboard-check" class="text-primary me-2" />
-          <span class="text-h6">O.S. enviada!</span>
+          <span class="text-h6">{{ iniciarEmLote ? 'Ordens enviadas!' : 'O.S. enviada!' }}</span>
           <font-awesome-icon icon="xmark" @click="closeModal" class="text-close float-right icon-clicavel me-2" />
         </v-card-title>
         <v-divider class="pb-4" />
         <v-card-text class="pb-4">
-          <p><strong>Nº O.S:</strong> {{ confirmationNumber }}</p>
-          <p><strong>Endereço:</strong> {{ currentItem.endereco }}</p>
-          <p><strong>Serviço:</strong> {{ currentItem.servico }}</p>
+          <!-- Lote -->
+          <template v-if="iniciarEmLote">
+            <span class="text-body-2 text-medium-emphasis d-block mb-2">Ordens de serviço enviadas:</span>
+            <div class="d-flex flex-column" style="max-height:260px; overflow-y:auto;">
+              <div
+                v-for="(os, idx) in ocorrenciasSelecionadasLote"
+                :key="os.id"
+                class="d-flex align-center py-2 px-1"
+                :class="{ 'border-t': idx > 0 }"
+                style="border-color: rgba(0,0,0,0.08) !important"
+              >
+                <span class="text-primary me-2" style="font-size:10px; flex-shrink:0">●</span>
+                <span class="text-body-2"><strong>{{ os.codigo }}</strong></span>
+                <span v-if="os.endereco" class="text-body-2 text-medium-emphasis ms-2">— {{ os.endereco }}</span>
+              </div>
+            </div>
+          </template>
+
+          <!-- Individual -->
+          <template v-else>
+            <div class="d-flex align-center mb-1">
+              <span class="text-body-2 text-medium-emphasis" style="min-width:90px">Nº O.S.:</span>
+              <strong>{{ confirmationNumber }}</strong>
+            </div>
+            <div class="d-flex align-center mb-2">
+              <span class="text-body-2 text-medium-emphasis" style="min-width:90px">Endereço:</span>
+              <span class="text-body-2">{{ currentItem.endereco }}</span>
+            </div>
+            <div class="mt-1">
+              <span class="text-body-2 text-medium-emphasis d-block mb-1">Serviços solicitados:</span>
+              <div v-if="servicosSolicitados.length" class="d-flex flex-column">
+                <div
+                  v-for="(s, idx) in servicosSolicitados"
+                  :key="idx"
+                  class="d-flex align-center py-2 px-1"
+                  :class="{ 'border-t': idx > 0 }"
+                  style="border-color: rgba(0,0,0,0.08) !important"
+                >
+                  <span class="text-primary me-2" style="font-size:10px; flex-shrink:0">●</span>
+                  <span class="text-body-2">{{ s.descricao }}</span>
+                </div>
+              </div>
+              <span v-else class="text-body-2 text-medium-emphasis">Nenhum serviço solicitado.</span>
+            </div>
+          </template>
         </v-card-text>
         <v-divider class="pb-4" />
         <v-card-actions class="justify-end">
@@ -1092,17 +1132,23 @@ function alterarOrdenacao(evento) {
             <strong>Nº O.S:</strong> {{ currentItem.codigo }}
           </p>
           <v-autocomplete
-            v-model="despachoEquipe"
-            :items="teamOptions"
-            item-title="descricao"
+            v-model="despachoFuncionarioId"
+            :items="listaFuncionarios"
+            item-title="nome"
             item-value="id"
-            label="Equipe"
+            label="Funcionário responsável"
             variant="outlined"
             clearable
             density="comfortable"
             hide-details
             class="mb-4"
-          />
+            v-model:search="searchDespachoFuncionario"
+            no-data-text="Nenhum funcionário encontrado"
+          >
+            <template #prepend-inner>
+              <font-awesome-icon icon="user" class="text-medium-emphasis me-1" />
+            </template>
+          </v-autocomplete>
           <v-text-field
             v-model="despachoDataHora"
             label="Data/hora do despacho"
@@ -1119,6 +1165,12 @@ function alterarOrdenacao(evento) {
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <OrdemServicoDocumentos
+      v-model="documentosDialog"
+      :ordemServico="ordemServicoDocumentosAtual"
+      @update:modelValue="valor => { if (!valor) { documentosDialog = false; ordemServicoDocumentosAtual = null } }"
+    />
 
     <Snackbar
       :retorno="retorno"

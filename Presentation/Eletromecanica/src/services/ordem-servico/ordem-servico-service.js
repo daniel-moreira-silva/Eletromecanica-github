@@ -43,12 +43,12 @@ class OrdemServicoService extends FetchService {
 
   async iniciarOrdemServico(obj) {
     const route = `${this.endpoint}ordem-servico/iniciar`
-    return await this.fetchResponse('POST', this.headerPadrao, obj, false, route, true)
+    return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
   }
 
   async devolverOrdemServico(obj) {
     const route = `${this.endpoint}ordem-servico/devolver`
-    return await this.fetchResponse('POST', this.headerPadrao, obj, false, route, true)
+    return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
   }
 
   async cancelarOrdemServico(obj) {
@@ -58,7 +58,7 @@ class OrdemServicoService extends FetchService {
 
   async despacharOrdemServico(obj) {
     const route = `${this.endpoint}ordem-servico/despachar`
-    return await this.fetchResponse('POST', this.headerPadrao, obj, false, route, true)
+    return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
   }
 }
 

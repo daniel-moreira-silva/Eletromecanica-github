@@ -13,4 +13,7 @@ public interface IOrdemServicoService
     Task<List<Regiao>> GetAllRegioesOrdemServicoAsync(CancellationToken cancellationToken);
     Task<IEnumerable<OrdemServico>> GetByAddressAsync(string search, CancellationToken cancellationToken);
     Task<bool> CancelarOrdemServicoAsync(Guid id, Guid motivoCancelamentoId, string observacao, CancellationToken cancellationToken);
+    Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, CancellationToken cancellationToken);
+    Task<bool> DespacharOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, DateTime dataDespachoProgramado, CancellationToken cancellationToken);
+    Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, CancellationToken cancellationToken);
 }

@@ -11,7 +11,7 @@ public class RegraPreventiva
     public DateTime DataInicio { get; set; }
     public DateTime? ProximoProcessamento { get; set; }
     public DateTime? UltimoProcessamento { get; set; }
-    public EPrioridadeOS Prioridade { get; set; }
+    public EPrioridade Prioridade { get; set; }
     public bool Ativo { get; set; }
     public DateTime? DataCriacao { get; set; }
     public List<RegraPreventivaServicoSolicitado> ServicosSolicitados { get; set; } = [];

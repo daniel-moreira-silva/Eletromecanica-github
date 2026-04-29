@@ -47,6 +47,12 @@ public class OrdemServicoService(DbConnection connection,
         ordemServico.Codigo = string.Concat(ordemServico.Numero, "/", ordemServico.Ano, "/", ordemServico.SubOS);
         ordemServico.IsAgendada = ordemServico.AgendamentoId != null;
 
+        // Define a prioridade da ordem de serviço com base na prioridade dos serviços solicitados
+        var servicosSolicitados = await servicoSolicitadoRepository.GetAllByIdListAsync(ordemServico.ServicosSolicitados?.Select(s => s.ServicoSolicitadoId).ToList() ?? [], transaction, cancellationToken);
+
+        if (servicosSolicitados.Count > 0)
+            ordemServico.Prioridade = servicosSolicitados.Max(s => s.Prioridade);
+
         var ordemServicoId = await repository.AddAsync(ordemServico, transaction, cancellationToken);
 
         foreach (var servico in ordemServico.ServicosSolicitados ?? [])
@@ -106,6 +112,15 @@ public class OrdemServicoService(DbConnection connection,
     public async Task<IEnumerable<ListaCountOrdemServico>> ListaCountOrdemServicoAsync(OrdemServicoFilter filtro, CancellationToken cancellationToken)
         => await repository.ListaCountOrdemServicoAsync(filtro, cancellationToken: cancellationToken);
 
-    public async Task<bool> CancelarOrdemServicoAsync(Guid id, Guid motivoCancelamentoId, string observacao, CancellationToken cancellationToken)
-        => await repository.CancelarOrdemServicoAsync(id, motivoCancelamentoId, observacao, cancellationToken: cancellationToken);
+    public async Task<bool> CancelarOrdemServicoAsync(Guid ordemServicoId, Guid motivoCancelamentoId, string observacao, CancellationToken cancellationToken)
+        => await repository.CancelarOrdemServicoAsync(ordemServicoId, motivoCancelamentoId, observacao, cancellationToken: cancellationToken);
+
+    public async Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, CancellationToken cancellationToken)
+        => await repository.IniciarOrdemServicoAsync(ordemServicoId, funcionarioId, cancellationToken: cancellationToken);
+
+    public async Task<bool> DespacharOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, DateTime dataDespachoProgramado, CancellationToken cancellationToken)
+        => await repository.DespacharOrdemServicoAsync(ordemServicoId, funcionarioId, dataDespachoProgramado, cancellationToken: cancellationToken);
+
+    public async Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, CancellationToken cancellationToken)
+        => await repository.DevolverOrdemServicoAsync(ordemServicoId, observacaoDevolucao, cancellationToken: cancellationToken);
 }
