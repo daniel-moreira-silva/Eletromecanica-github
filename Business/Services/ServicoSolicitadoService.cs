@@ -11,7 +11,7 @@ public class ServicoSolicitadoService(IServicoSolicitadoRepository repository) :
     public async Task<ServicoSolicitado?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         => await repository.GetByIdAsync(id, null, cancellationToken);
 
-    public async Task<ListaPaginada<ServicoSolicitado>> PaginatedGetAsync(ServicoSolicitadoFilter filter, CancellationToken cancellationToken)
+    public async Task<ListaPaginada<ServicoSolicitadoList>> PaginatedGetAsync(ServicoSolicitadoFilter filter, CancellationToken cancellationToken)
         => await repository.PaginatedGetAsync(filter, null, cancellationToken);
 
     public async Task<bool> UpdateAsync(ServicoSolicitado servicoSolicitado, CancellationToken cancellationToken)

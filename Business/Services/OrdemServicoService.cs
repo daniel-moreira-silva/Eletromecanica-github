@@ -38,12 +38,25 @@ public class OrdemServicoService(DbConnection connection,
 
     private async Task CreateOrdemServicoAsync(OrdemServico ordemServico, DbTransaction transaction, CancellationToken cancellationToken)
     {
-        var numeroOs = await repository.GetNextNumberOSAynsc(transaction, cancellationToken);
         ordemServico.DataSolicitacao = DateTime.Now;
         ordemServico.StatusId = Guid.Parse(Constantes.OrdemServicoStatusSolicitada);
-        ordemServico.Numero = numeroOs;
-        ordemServico.Ano = DateTime.UtcNow.Year;
-        ordemServico.SubOS = 0;
+
+        if (ordemServico.OrdemServicoPaiId.HasValue)
+        {
+            var pai = await repository.GetByIdAsync(ordemServico.OrdemServicoPaiId.Value, transaction, cancellationToken)
+                ?? throw new InvalidOperationException("Ordem de serviço pai não encontrada.");
+
+            ordemServico.Numero = pai.Numero;
+            ordemServico.Ano = pai.Ano;
+            ordemServico.SubOS = await repository.GetNextSubOSAsync(pai.Numero!.Value, pai.Ano!.Value, transaction, cancellationToken);
+        }
+        else
+        {
+            ordemServico.Numero = await repository.GetNextNumberOSAynsc(transaction, cancellationToken);
+            ordemServico.Ano = DateTime.UtcNow.Year;
+            ordemServico.SubOS = 0;
+        }
+
         ordemServico.Codigo = string.Concat(ordemServico.Numero, "/", ordemServico.Ano, "/", ordemServico.SubOS);
         ordemServico.IsAgendada = ordemServico.AgendamentoId != null;
 
@@ -69,7 +82,42 @@ public class OrdemServicoService(DbConnection connection,
     }
 
     public async Task<bool> UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken)
-        => await repository.UpdateAsync(ordemServico, cancellationToken: cancellationToken);
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+        using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            if (!await repository.UpdateAsync(ordemServico, transaction, cancellationToken))
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return false;
+            }
+
+            await repository.DeleteServicosSolicitadosByOrdemServicoAsync(ordemServico.Id!.Value, transaction, cancellationToken);
+            await repository.DeleteEquipamentosByOrdemServicoAsync(ordemServico.Id!.Value, transaction, cancellationToken);
+
+            foreach (var servico in ordemServico.ServicosSolicitados ?? [])
+            {
+                servico.OrdemServicoId = ordemServico.Id.Value;
+                await repository.AddOrdemServicoServicoSolicitadoAsync(servico, transaction, cancellationToken);
+            }
+
+            foreach (var equip in ordemServico.Equipamentos ?? [])
+            {
+                equip.OrdemServicoId = ordemServico.Id;
+                await repository.AddOrdemServicoEquipamentoAsync(equip, transaction, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Erro ao atualizar ordem de serviço.");
+            return false;
+        }
+    }
 
     public async Task<ListaPaginada<OrdemServicoList>> PaginatedGetAsync(OrdemServicoFilter filtro, CancellationToken cancellationToken)
         => await repository.PaginatedGetAsync(filtro, cancellationToken: cancellationToken);
@@ -123,4 +171,10 @@ public class OrdemServicoService(DbConnection connection,
 
     public async Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, CancellationToken cancellationToken)
         => await repository.DevolverOrdemServicoAsync(ordemServicoId, observacaoDevolucao, cancellationToken: cancellationToken);
+
+    public async Task<bool> AtualizarPrioridadeAsync(Guid ordemServicoId, EPrioridade prioridade, CancellationToken cancellationToken)
+        => await repository.AtualizarPrioridadeAsync(ordemServicoId, prioridade, cancellationToken: cancellationToken);
+
+    public async Task<IEnumerable<OrdemServicoList>> GetSubOsListAsync(int numero, int ano, Guid excludeId, CancellationToken cancellationToken)
+        => await repository.GetSubOsListAsync(numero, ano, excludeId, cancellationToken: cancellationToken);
 }

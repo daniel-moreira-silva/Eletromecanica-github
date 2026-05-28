@@ -60,6 +60,21 @@ class OrdemServicoService extends FetchService {
     const route = `${this.endpoint}ordem-servico/despachar`
     return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
   }
+
+  async atualizarPrioridade(obj) {
+    const route = `${this.endpoint}ordem-servico/atualizar-prioridade`
+    return await this.fetchResponse('PATCH', this.headerPadrao, obj, false, route, true)
+  }
+
+  async listarSubOs(numero, ano, excludeId) {
+    const route = `${this.endpoint}ordem-servico/sub-os?numero=${numero}&ano=${ano}&excludeId=${excludeId}`
+    return await this.fetchResponse('GET', this.headerPadrao, null, false, route, true)
+  }
+
+  async atualizarOrdemServico(obj) {
+    const route = `${this.endpoint}ordem-servico`
+    return await this.fetchResponse('PUT', this.headerPadrao, obj, false, route, true)
+  }
 }
 
 export default OrdemServicoService

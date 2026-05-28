@@ -115,18 +115,19 @@ public class DocumentoRepository(DbConnection connection) : IDocumentoRepository
         return await connection.ExecuteScalarAsync<Guid>(new CommandDefinition(sql, vinculo, transaction, cancellationToken: cancellationToken));
     }
 
-    public async Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, bool? fotoExecucao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
-        const string sql = @" 
-            UPDATE Documento 
+        const string sql = @"
+            UPDATE Documento
             SET NomeOriginal = @NomeOriginal,
                 Descricao = @Descricao,
-                Publico = @Publico
+                Publico = @Publico,
+                FotoExecucao = @FotoExecucao
             WHERE Id = @Id;";
 
-        var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { id, NomeOriginal = nomeOriginal, Descricao = descricao, Publico = publico }, transaction, cancellationToken: cancellationToken));
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { id, NomeOriginal = nomeOriginal, Descricao = descricao, Publico = publico, FotoExecucao = fotoExecucao }, transaction, cancellationToken: cancellationToken));
         return rows > 0;
     }
 

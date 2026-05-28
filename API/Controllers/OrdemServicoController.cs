@@ -1,4 +1,4 @@
-﻿using System.Resources;
+﻿using Core.Models.Enums;
 
 namespace API.Controllers;
 
@@ -195,8 +195,43 @@ public class OrdemServicoController(ILogger<EstacaoController> logger, IOrdemSer
         }
     }
 
+    [HttpGet("sub-os")]
+    public async Task<IActionResult> GetSubOsListAsync([FromQuery] int numero, [FromQuery] int ano, [FromQuery] Guid excludeId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await service.GetSubOsListAsync(numero, ano, excludeId, cancellationToken);
+            return Ok(new SuccessMessage("Lista de Sub-OS retornada com sucesso.", result));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao buscar sub-OS.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
+    [HttpPatch("atualizar-prioridade")]
+    public async Task<IActionResult> AtualizarPrioridadeAsync(AtualizarPrioridadeDto dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            bool result = await service.AtualizarPrioridadeAsync(dto.OrdemServicoId, dto.Prioridade, cancellationToken);
+
+            if (!result)
+                return NotFound(new ErrorMessage("Registro não encontrado.", dto.OrdemServicoId));
+
+            return Ok(new SuccessMessage("Prioridade atualizada com sucesso.", dto.OrdemServicoId));
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Erro ao atualizar a prioridade da ordem de serviço.");
+            return BadRequest(new ErrorMessage(Constantes.ERRO_EXEC_METODO + ex.Message));
+        }
+    }
+
     public sealed record CancelamentoDto(Guid OrdemServicoId, Guid MotivoCancelamentoId, string Observacao);
     public sealed record IniciarDto(Guid OrdemServicoId, Guid FuncionarioId);
     public sealed record DespacharDto(Guid OrdemServicoId, Guid FuncionarioId, DateTime DataDespachoProgramado);
     public sealed record DevolverDto(Guid OrdemServicoId, string ObservacaoDevolucao);
+    public sealed record AtualizarPrioridadeDto(Guid OrdemServicoId, EPrioridade Prioridade);
 }

@@ -1,6 +1,4 @@
 <script setup>
-/* global defineProps, defineEmits */
-
 import { computed, reactive, ref, watch } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import { WizardPopService } from '@/services/ordem-servico/pop-wizard'

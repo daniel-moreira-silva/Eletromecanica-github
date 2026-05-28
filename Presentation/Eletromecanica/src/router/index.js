@@ -44,6 +44,11 @@ const routes = [
     component: () => import('@/views/configuracoes/MotivoCancelamento.vue')
   },
   {
+    path: '/material',
+    name: 'Material',
+    component: () => import('@/views/configuracoes/Material.vue')
+  },
+  {
     path: "/funcionario",
     name: "Funcionários",
     component: () => import("@/views/configuracoes/Funcionario.vue"),

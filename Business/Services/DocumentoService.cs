@@ -118,8 +118,8 @@ public class DocumentoService(IDocumentoRepository documentoRepository,
         return AppContext.BaseDirectory;
     }
 
-    public async Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, CancellationToken cancellationToken) 
-        => await documentoRepository.UpdateDocumentoAsync(id, nomeOriginal, descricao, publico, cancellationToken: cancellationToken);
+    public async Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, bool? fotoExecucao, CancellationToken cancellationToken)
+        => await documentoRepository.UpdateDocumentoAsync(id, nomeOriginal, descricao, publico, fotoExecucao, cancellationToken: cancellationToken);
 
     public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
     {

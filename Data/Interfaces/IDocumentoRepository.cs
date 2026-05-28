@@ -6,7 +6,7 @@ public interface IDocumentoRepository
     Task<Documento?> GetByIdAsync(Guid documentoId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<Guid> AddAsync(Documento documento, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<Guid> AddVinculoAsync(DocumentoVinculo vinculo, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
-    Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<bool> UpdateDocumentoAsync(Guid? id, string nomeOriginal, string descricao, bool publico, bool? fotoExecucao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<bool> UpdateOrdemDocumentoAsync(Guid id, int ordem, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<bool> DeleteByIdAsync(Guid id, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<Documento?> GetByHashAsync(string hash, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);

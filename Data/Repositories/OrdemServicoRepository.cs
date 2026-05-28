@@ -1,6 +1,4 @@
-﻿using Core.Models.FuncionarioAggregate;
-
-namespace Data.Repositories;
+﻿namespace Data.Repositories;
 
 public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepository
 {
@@ -34,7 +32,8 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 DataParalisacao,
                 DataInicioExecucao,
                 CustoTotal,
-                Observacao
+                Observacao,
+                OrdemServicoPaiId
             )
             OUTPUT INSERTED.Id
             VALUES
@@ -62,7 +61,8 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
                 @DataParalisacao,
                 @DataInicioExecucao,
                 @CustoTotal,
-                @Observacao
+                @Observacao,
+                @OrdemServicoPaiId
             );
         ";
 
@@ -245,6 +245,39 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         return await connection.QueryFirstOrDefaultAsync<int>(new CommandDefinition(sql, new { Ano = DateTime.Now.Year }, transaction, cancellationToken: cancellationToken));
     }
 
+    public async Task<int> GetNextSubOSAsync(int numero, int ano, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"SELECT ISNULL(MAX(SubOs), 0) + 1 FROM OrdemServico WHERE Numero = @Numero AND Ano = @Ano";
+
+        return await connection.QueryFirstOrDefaultAsync<int>(new CommandDefinition(sql, new { Numero = numero, Ano = ano }, transaction, cancellationToken: cancellationToken));
+    }
+
+    public async Task<IEnumerable<OrdemServicoList>> GetSubOsListAsync(int numero, int ano, Guid excludeId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            SELECT
+                OS.*,
+                ES.Nome AS Estacao,
+                ES.Endereco AS Endereco,
+                S.Descricao AS Status,
+                F.Nome AS Funcionario
+            FROM OrdemServico OS
+            LEFT JOIN Estacao ES ON ES.Id = OS.EstacaoId
+            LEFT JOIN StatusOrdemServico S ON S.Id = OS.StatusId
+            LEFT JOIN Funcionario F ON F.Id = OS.FuncionarioId
+            WHERE OS.Numero = @Numero AND OS.Ano = @Ano AND OS.Id <> @ExcludeId
+            ORDER BY OS.SubOs ASC
+        ";
+
+        return await connection.QueryAsync<OrdemServicoList>(
+            new CommandDefinition(sql, new { Numero = numero, Ano = ano, ExcludeId = excludeId }, transaction, cancellationToken: cancellationToken)
+        );
+    }
+
     public async Task<IEnumerable<OrdemServico>> GetByAddressAsync(string busca, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
@@ -338,6 +371,20 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         return await connection.ExecuteScalarAsync<Guid>(new CommandDefinition(sql, ordemServicoEquipamento, transaction, cancellationToken: cancellationToken));
     }
 
+    public async Task DeleteServicosSolicitadosByOrdemServicoAsync(Guid ordemServicoId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+        const string sql = "DELETE FROM OrdemServicoServicoSolicitado WHERE OrdemServicoId = @OrdemServicoId";
+        await connection.ExecuteAsync(new CommandDefinition(sql, new { OrdemServicoId = ordemServicoId }, transaction, cancellationToken: cancellationToken));
+    }
+
+    public async Task DeleteEquipamentosByOrdemServicoAsync(Guid ordemServicoId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+        const string sql = "DELETE FROM OrdemServicoEquipamento WHERE OrdemServicoId = @OrdemServicoId";
+        await connection.ExecuteAsync(new CommandDefinition(sql, new { OrdemServicoId = ordemServicoId }, transaction, cancellationToken: cancellationToken));
+    }
+
     public async Task<IEnumerable<OrdemServico>> GetAllByEquipamentoIdAndDateAsync(Guid id, DateTime date, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
@@ -407,7 +454,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
     private static void AplicarFiltros(SqlQueryBuilder builder, OrdemServicoFilter filtro)
     {
         if (!string.IsNullOrWhiteSpace(filtro.Numero))
-            builder.Where("UPPER(CAST(OS.Numero AS VARCHAR(50))) LIKE '%' + @Numero + '%'", "@Numero", filtro.Numero.ToUpper());
+            builder.Where("UPPER(CAST(OS.Codigo AS VARCHAR(50))) LIKE '%' + @Numero + '%'", "@Numero", filtro.Numero.ToUpper());
 
         if (!string.IsNullOrWhiteSpace(filtro.Nome))
             builder.Where("OS.Nome LIKE '%' + @Nome + '%'", "@Nome", filtro.Nome);
@@ -442,54 +489,23 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         if (filtro.MotivoCancelamentoId != null && filtro.MotivoCancelamentoId.Any())
             builder.Where("OS.MotivoCancelamentoId IN @MotivoCancelamentoId", "@MotivoCancelamentoId", filtro.MotivoCancelamentoId);
 
-        if (filtro.DataSolicitacaoInicio.HasValue && filtro.DataSolicitacaoFim.HasValue)
-            builder.Where("OS.DataSolicitacao BETWEEN @DataSolicitacaoInicio AND @DataSolicitacaoFim", new()
-            {
-                ["@DataSolicitacaoInicio"] = filtro.DataSolicitacaoInicio.Value,
-                ["@DataSolicitacaoFim"]    = filtro.DataSolicitacaoFim.Value
-            });
+        AplicarFiltroPeriodo(builder, "OS.DataSolicitacao", filtro.DataSolicitacaoInicio, filtro.DataSolicitacaoFim, "DataSolicitacaoInicio", "DataSolicitacaoFim");
+        AplicarFiltroPeriodo(builder, "OS.DataAgendamento", filtro.DataAgendamentoInicio, filtro.DataAgendamentoFim, "DataAgendamentoInicio", "DataAgendamentoFim");
+        AplicarFiltroPeriodo(builder, "OS.DataDespacho", filtro.DataDespachoInicio, filtro.DataDespachoFim, "DataDespachoInicio", "DataDespachoFim");
+        AplicarFiltroPeriodo(builder, "OS.DataFinalizacao", filtro.DataFinalizacaoInicio, filtro.DataFinalizacaoFim, "DataFinalizacaoInicio", "DataFinalizacaoFim");
+        AplicarFiltroPeriodo(builder, "OS.DataParalisacao", filtro.DataParalisacaoInicio, filtro.DataParalisacaoFim, "DataParalisacaoInicio", "DataParalisacaoFim");
+        AplicarFiltroPeriodo(builder, "OS.DataDespachoProgramado", filtro.DataDespachoProgramadoInicio, filtro.DataDespachoProgramadoFim, "DataDespachoProgramadoInicio", "DataDespachoProgramadoFim");
+        AplicarFiltroPeriodo(builder, "OS.DataCancelamento", filtro.DataCancelamentoInicio, filtro.DataCancelamentoFim, "DataCancelamentoInicio", "DataCancelamentoFim");
+    }
 
-        if (filtro.DataAgendamentoInicio.HasValue && filtro.DataAgendamentoFim.HasValue)
-            builder.Where("OS.DataAgendamento BETWEEN @DataAgendamentoInicio AND @DataAgendamentoFim", new()
-            {
-                ["@DataAgendamentoInicio"] = filtro.DataAgendamentoInicio.Value,
-                ["@DataAgendamentoFim"]    = filtro.DataAgendamentoFim.Value
-            });
-
-        if (filtro.DataDespachoInicio.HasValue && filtro.DataDespachoFim.HasValue)
-            builder.Where("OS.DataDespacho BETWEEN @DataDespachoInicio AND @DataDespachoFim", new()
-            {
-                ["@DataDespachoInicio"] = filtro.DataDespachoInicio.Value,
-                ["@DataDespachoFim"]    = filtro.DataDespachoFim.Value
-            });
-
-        if (filtro.DataFinalizacaoInicio.HasValue && filtro.DataFinalizacaoFim.HasValue)
-            builder.Where("OS.DataFinalizacao BETWEEN @DataFinalizacaoInicio AND @DataFinalizacaoFim", new()
-            {
-                ["@DataFinalizacaoInicio"] = filtro.DataFinalizacaoInicio.Value,
-                ["@DataFinalizacaoFim"]    = filtro.DataFinalizacaoFim.Value
-            });
-
-        if (filtro.DataParalisacaoInicio.HasValue && filtro.DataParalisacaoFim.HasValue)
-            builder.Where("OS.DataParalisacao BETWEEN @DataParalisacaoInicio AND @DataParalisacaoFim", new()
-            {
-                ["@DataParalisacaoInicio"] = filtro.DataParalisacaoInicio.Value,
-                ["@DataParalisacaoFim"]    = filtro.DataParalisacaoFim.Value
-            });
-
-        if (filtro.DataDespachoProgramadoInicio.HasValue && filtro.DataDespachoProgramadoFim.HasValue)
-            builder.Where("OS.DataDespachoProgramado BETWEEN @DataDespachoProgramadoInicio AND @DataDespachoProgramadoFim", new()
-            {
-                ["@DataDespachoProgramadoInicio"] = filtro.DataDespachoProgramadoInicio.Value,
-                ["@DataDespachoProgramadoFim"]    = filtro.DataDespachoProgramadoFim.Value
-            });
-
-        if (filtro.DataCancelamentoInicio.HasValue && filtro.DataCancelamentoFim.HasValue)
-            builder.Where("OS.DataCancelamento BETWEEN @DataCancelamentoInicio AND @DataCancelamentoFim", new()
-            {
-                ["@DataCancelamentoInicio"] = filtro.DataCancelamentoInicio.Value,
-                ["@DataCancelamentoFim"]    = filtro.DataCancelamentoFim.Value
-            });
+    private static void AplicarFiltroPeriodo(SqlQueryBuilder builder, string coluna, DateTime? inicio, DateTime? fim, string paramInicio, string paramFim)
+    {
+        if (inicio.HasValue && fim.HasValue)
+            builder.Where($"CAST({coluna} AS DATE) BETWEEN @{paramInicio} AND @{paramFim}", new() { [$"@{paramInicio}"] = inicio.Value.Date, [$"@{paramFim}"] = fim.Value.Date });
+        else if (inicio.HasValue)
+            builder.Where($"CAST({coluna} AS DATE) >= @{paramInicio}", $"@{paramInicio}", inicio.Value.Date);
+        else if (fim.HasValue)
+            builder.Where($"CAST({coluna} AS DATE) <= @{paramFim}", $"@{paramFim}", fim.Value.Date);
     }
 
     public async Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
@@ -532,7 +548,7 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
         const string sql = @"
-            UPDATE OrdemServico 
+            UPDATE OrdemServico
             SET DataDespacho = NULL,
             DataDespachoProgramado = NULL,
             FuncionarioId = NULL,
@@ -544,6 +560,21 @@ public class OrdemServicoRepository(DbConnection connection) : IOrdemServicoRepo
 
         var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
             new { Id = ordemServicoId, ObservacaoDevolucao = observacaoDevolucao, StatusId = Constantes.OrdemServicoStatusSolicitada }, transaction, cancellationToken: cancellationToken));
+        return rows > 0;
+    }
+
+    public async Task<bool> AtualizarPrioridadeAsync(Guid ordemServicoId, EPrioridade prioridade, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    {
+        await DbUtils.EnsureOpenAsync(connection, cancellationToken);
+
+        const string sql = @"
+            UPDATE OrdemServico
+            SET Prioridade = @Prioridade
+            WHERE Id = @Id
+        ";
+
+        var rows = await connection.ExecuteAsync(new CommandDefinition(sql,
+            new { Id = ordemServicoId, Prioridade = prioridade }, transaction, cancellationToken: cancellationToken));
         return rows > 0;
     }
 }

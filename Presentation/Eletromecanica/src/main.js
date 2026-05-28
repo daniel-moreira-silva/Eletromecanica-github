@@ -191,6 +191,34 @@ let data = {
             {
               id: "ddc8d0b4-90d0-4604-8a3e-fa472bb89978",
               moduloId: "3a7a6de8-4ea3-41dd-a4f5-6e5b76f26a88",
+              descricao: "Materiais",
+              url: "/material",
+              ordenacao: 3,
+              ativo: true,
+              exibirMenu: true,
+              ativoFormatado: "Ativo",
+              permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesPerfil: "[Criar,Editar,Excluir,Exportar,Ler]",
+              permissoesUsuario: [
+                {
+                  id: "1b91bf49-5c07-49ba-b4fd-9f472400d678",
+                  usuarioId: "62f4295c-7763-42cf-b33a-5ca851f0b1aa",
+                  telaId: "ddc8d0b4-90d0-4604-8a3e-fa472bb89978",
+                  permissaoDisponivel: "[Criar,Editar,Excluir,Exportar,Ler]",
+                  dataAtribuicao: "2025-11-25T09:28:15.027",
+                  dataInicio: "2025-11-25T00:00:00",
+                  dataExpiracao: "2026-11-25T00:00:00",
+                  permissaoExtra: false,
+                  observacao: "",
+                  dataAtribuicaoFormatada: "25/11/2025",
+                  dataInicioFormatada: "25/11/2025",
+                  dataExpiracaoFormatada: "25/11/2026"
+                }
+              ]
+            },
+            {
+              id: "ddc8d0b4-90d0-4604-8a3e-fa472bb89978",
+              moduloId: "3a7a6de8-4ea3-41dd-a4f5-6e5b76f26a88",
               descricao: "Serviços Executados",
               url: "/servicos-executados",
               ordenacao: 4,

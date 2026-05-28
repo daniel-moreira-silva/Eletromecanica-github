@@ -7,9 +7,9 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
         const string sql = @"
-            INSERT INTO ServicoSolicitado (Codigo, Descricao)
+            INSERT INTO ServicoSolicitado (Codigo, Descricao, Prioridade, Sla)
             OUTPUT INSERTED.Id
-            VALUES (@Codigo, @Descricao);
+            VALUES (@Codigo, @Descricao, @Prioridade, @Sla);
         ";
 
         return await connection.ExecuteScalarAsync<Guid>(new CommandDefinition(sql, servicoSolicitado, transaction, cancellationToken: cancellationToken));
@@ -24,6 +24,8 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
             SET
                 Codigo = @Codigo,
                 Descricao = @Descricao,
+                Prioridade = @Prioridade,
+                Sla = @Sla,
                 Ativo = @Ativo
             WHERE Id = @Id;
         ";
@@ -59,7 +61,7 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         return rows > 0;
     }
 
-    public async Task<ListaPaginada<ServicoSolicitado>> PaginatedGetAsync(ServicoSolicitadoFilter filter, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public async Task<ListaPaginada<ServicoSolicitadoList>> PaginatedGetAsync(ServicoSolicitadoFilter filter, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         await DbUtils.EnsureOpenAsync(connection, cancellationToken);
 
@@ -68,6 +70,8 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
                 Id,
                 Codigo,
                 Descricao,
+                Prioridade,
+                Sla,
                 Ativo
             FROM ServicoSolicitado
         ";
@@ -114,7 +118,7 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
         builder.Parameters.Add("@Pagina", filter.Pagina);
         builder.Parameters.Add("@ItensPagina", filter.ItensPagina);
 
-        var lista = await connection.QueryAsync<ServicoSolicitado>(
+        var lista = await connection.QueryAsync<ServicoSolicitadoList>(
             new CommandDefinition(query, builder.Parameters, transaction, cancellationToken: cancellationToken)
         );
 
@@ -124,7 +128,7 @@ internal class ServicoSolicitadoRepository(DbConnection connection) : IServicoSo
 
         var paginas = Math.Max(1, (int)Math.Ceiling(total / (double)filter.ItensPagina));
 
-        return new ListaPaginada<ServicoSolicitado>
+        return new ListaPaginada<ServicoSolicitadoList>
         {
             Lista = lista.AsList(),
             Paginas = paginas,

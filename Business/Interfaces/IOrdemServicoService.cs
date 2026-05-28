@@ -16,4 +16,6 @@ public interface IOrdemServicoService
     Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, CancellationToken cancellationToken);
     Task<bool> DespacharOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, DateTime dataDespachoProgramado, CancellationToken cancellationToken);
     Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, CancellationToken cancellationToken);
+    Task<bool> AtualizarPrioridadeAsync(Guid ordemServicoId, EPrioridade prioridade, CancellationToken cancellationToken);
+    Task<IEnumerable<OrdemServicoList>> GetSubOsListAsync(int numero, int ano, Guid excludeId, CancellationToken cancellationToken);
 }

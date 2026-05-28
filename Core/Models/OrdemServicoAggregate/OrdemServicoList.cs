@@ -9,6 +9,7 @@ public class OrdemServicoList
     public int? Numero { get; set; }
     public int? SubOS { get; set; }
     public int? Ano { get; set; }
+    public Guid? OrdemServicoPaiId { get; set; }
     public Guid EstacaoId { get; set; }
     public string Estacao { get; set; } = default!;
     public Guid FuncionarioId { get; set; }
@@ -46,8 +47,6 @@ public class OrdemServicoList
     public string DataSolicitacaoFormatada { get { return DataSolicitacao.ToBrazilianFormat(); } }
     public DateTime? DataInicioExecucao { get; set; }
     public string? DataInicioExecucaoFormatada { get { return DataInicioExecucao.ToBrazilianFormat(); } }
-    //public DateTime? DataPrevista { get; set; }
-    //public string? DataPrevistaFormatada { get; set; }
     public decimal? CustoTotal { get; set; }   // custo acumulado
     public string? Observacao { get; set; }
     public string? ObservacaoDevolucao { get; set; }

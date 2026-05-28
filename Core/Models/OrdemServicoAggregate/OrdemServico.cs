@@ -7,6 +7,7 @@ public class OrdemServico
     public int? Numero { get; set; }
     public int? SubOS { get; set; }
     public int? Ano { get; set; }
+    public Guid? OrdemServicoPaiId { get; set; }
     public Guid EstacaoId { get; set; }
     public Guid FuncionarioId { get; set; }
     public Guid? AgendamentoId { get; set; }

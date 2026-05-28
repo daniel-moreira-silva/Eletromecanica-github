@@ -440,7 +440,7 @@ CREATE TABLE dbo.ServicoSolicitado (
     Codigo NVARCHAR(10) NOT NULL,
     Descricao NVARCHAR(80) NOT NULL,
     Prioridade TINYINT NOT NULL CONSTRAINT DF_ServicoSolicitado_Prioridade DEFAULT 1, -- 0=Baixa, 1=Media, 2=Alta, 3=Critica
-    Sla INT NOT NULL,
+    Sla DECIMAL(18, 6) NOT NULL,
     Ativo BIT NOT NULL CONSTRAINT DF_ServicoSolicitado_Ativo DEFAULT 1,
     CONSTRAINT UQ_ServicoSolicitado_Codigo UNIQUE (Codigo)
 );
@@ -521,6 +521,7 @@ CREATE TABLE dbo.OrdemServico (
     Numero INT NULL,
     SubOs INT NULL,
     Ano INT NOT NULL CONSTRAINT DF_OrdemServico_Ano DEFAULT YEAR(SYSDATETIME()),
+    OrdemServicoPaiId UNIQUEIDENTIFIER NULL,
 
     EstacaoId UNIQUEIDENTIFIER NOT NULL,
     FuncionariolId UNIQUEIDENTIFIER NULL,
@@ -749,4 +750,13 @@ CREATE INDEX IX_Funcionario_SetorId            ON dbo.Funcionario(SetorId);
 CREATE INDEX IX_Funcionario_TipoFuncionarioId  ON dbo.Funcionario(TipoFuncionarioId);
 CREATE INDEX IX_Funcionario_Ativo              ON dbo.Funcionario(Ativo);
 CREATE INDEX IX_Funcionario_Nome               ON dbo.Funcionario(Nome);
+GO
+
+CREATE TABLE dbo.Material (
+    Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Material PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Codigo NVARCHAR(50) NULL,
+    Descricao NVARCHAR(255) NOT NULL,
+    UnidadeMedida NVARCHAR(50) NULL,
+    Ativo BIT NOT NULL CONSTRAINT DF_Material_Ativo DEFAULT 1
+);
 GO

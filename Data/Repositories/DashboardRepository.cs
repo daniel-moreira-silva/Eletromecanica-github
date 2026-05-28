@@ -4,28 +4,43 @@ public class DashboardRepository(DbConnection connection) : IDashboardRepository
 {
     // Status OS
     public async Task<DashboardStatusOsDto> ObterStatusOsAsync(
-        Guid? estacaoId,
-        CancellationToken ct = default)
+    Guid? estacaoId,
+    CancellationToken ct = default)
     {
         await DbUtils.EnsureOpenAsync(connection, ct);
 
         var (filtro, parametros) = DbUtils.MontarBase(estacaoId);
 
+        // Atrasada (Opção A — SLA mínimo):
+        // pré-calcula a flag IsAtrasada por OS numa CTE,
+        // depois agrega normalmente. Evita "aggregate within aggregate".
         var sql = $@"
+        WITH OsBase AS (
             SELECT
-                SUM(CASE WHEN os.StatusId NOT IN (@StatusFinalizada, @StatusCancelada)
-                          AND os.DataPrevista IS NULL  THEN 1 ELSE 0 END) AS Abertas,
-                SUM(CASE WHEN os.StatusId = @StatusFinalizada              THEN 1 ELSE 0 END) AS Concluidas,
-                SUM(CASE WHEN os.StatusId NOT IN (@StatusFinalizada, @StatusCancelada)
-                          AND os.DataPrevista IS NOT NULL
-                          AND os.DataPrevista < @Hoje  THEN 1 ELSE 0 END) AS Atrasadas,
-                -- EmAndamento = qualquer status que não seja Finalizada ou Cancelada
-                SUM(CASE WHEN os.StatusId NOT IN (@StatusFinalizada, @StatusCancelada)
-                                                       THEN 1 ELSE 0 END) AS EmAndamento
+                os.Id,
+                os.StatusId,
+                so.Descricao AS StatusDescricao,
+                CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM OrdemServicoServicoSolicitado oss
+                    JOIN ServicoSolicitado ss ON ss.Id = oss.ServicoSolicitadoId
+                    WHERE oss.OrdemServicoId = os.Id
+                      AND ss.Sla IS NOT NULL
+                      AND DATEADD(DAY, ss.Sla, os.DataSolicitacao) < @Hoje
+                ) THEN 1 ELSE 0 END AS IsAtrasada
             FROM OrdemServico os
+            JOIN StatusOrdemServico so ON so.Id = os.StatusId
             WHERE os.Ano = @AnoAtual
               {filtro}
-        ";
+        )
+        SELECT
+            SUM(CASE WHEN StatusDescricao = 'Solicitada'  THEN 1 ELSE 0 END) AS Abertas,
+            SUM(CASE WHEN StatusDescricao = 'Em Execução' THEN 1 ELSE 0 END) AS EmAndamento,
+            SUM(CASE WHEN StatusDescricao = 'Finalizada'  THEN 1 ELSE 0 END) AS Concluidas,
+            SUM(CASE WHEN StatusDescricao NOT IN ('Finalizada', 'Cancelada')
+                      AND IsAtrasada = 1 THEN 1 ELSE 0 END) AS Atrasadas
+        FROM OsBase
+    ";
 
         return await connection.QueryFirstOrDefaultAsync<DashboardStatusOsDto>(
             new CommandDefinition(sql, parametros, cancellationToken: ct)
@@ -250,45 +265,53 @@ public class DashboardRepository(DbConnection connection) : IDashboardRepository
 
     // OS Atrasadas
     public async Task<List<DashboardOsAtrasadaDto>> ObterOsAtrasadasAsync(
-        Guid? estacaoId,
-        CancellationToken ct = default)
+    Guid? estacaoId,
+    CancellationToken ct = default)
     {
         await DbUtils.EnsureOpenAsync(connection, ct);
 
         var (filtro, parametros) = DbUtils.MontarBase(estacaoId);
 
-        // DataPrevista foi adicionado à OrdemServico
-        // Vínculo com equipamento é via OrdemServicoEquipamento (N:N)
-        // Pega apenas o primeiro equipamento vinculado (TOP 1 no sub-select) para exibição
+        // Junta OS x Serviços Solicitados, agrega por OS
+        // e deixa apenas as que estouraram pelo menos um SLA (MIN(Sla)).
+        // DiasAtraso é contado a partir da data limite mais cedo entre os serviços.
         var sql = $@"
-            SELECT TOP 10
-                CAST(os.Numero AS NVARCHAR(20))                   AS Numero,
-                ISNULL(
-                    (
-                        SELECT TOP 1 e2.Nome
-                        FROM OrdemServicoEquipamento ose2
-                        JOIN Equipamento e2 ON e2.Id = ose2.EquipamentoId
-                        WHERE ose2.OrdemServicoId = os.Id
-                        ORDER BY e2.Nome
-                    ), N'Não informado'
-                )                                                 AS NomeAtivo,
-                DATEDIFF(DAY, os.DataPrevista, @Hoje)             AS DiasAtraso,
-                CASE os.TipoOS
-                    WHEN 0 THEN N'Corretiva'
-                    WHEN 1 THEN N'Preventiva'
-                    WHEN 2 THEN N'Preditiva'
-                    ELSE        N'Inspeção'
-                END                                               AS Motivacao,
-                so.Descricao                                      AS Status
-            FROM OrdemServico os
-            JOIN StatusOrdemServico so ON so.Id = os.StatusId
-            WHERE os.DataPrevista   IS NOT NULL
-              AND os.DataPrevista    < @Hoje
-              AND os.StatusId       != @StatusFinalizada
-              AND os.StatusId       != @StatusCancelada
-              {filtro}
-            ORDER BY DiasAtraso DESC
-        ";
+        SELECT TOP 10
+            CAST(os.Numero AS NVARCHAR(20))                   AS Numero,
+            ISNULL(
+                (
+                    SELECT TOP 1 e2.Nome
+                    FROM OrdemServicoEquipamento ose2
+                    JOIN Equipamento e2 ON e2.Id = ose2.EquipamentoId
+                    WHERE ose2.OrdemServicoId = os.Id
+                    ORDER BY e2.Nome
+                ), N'Não informado'
+            )                                                 AS NomeAtivo,
+            DATEDIFF(
+                DAY,
+                DATEADD(DAY, MIN(ss.Sla), os.DataSolicitacao),
+                @Hoje
+            )                                                 AS DiasAtraso,
+            CASE os.TipoOS
+                WHEN 0 THEN N'Corretiva'
+                WHEN 1 THEN N'Preventiva'
+                WHEN 2 THEN N'Preditiva'
+                ELSE        N'Inspeção'
+            END                                               AS Motivacao,
+            so.Descricao                                      AS Status
+        FROM OrdemServico os
+        JOIN StatusOrdemServico so             ON so.Id  = os.StatusId
+        JOIN OrdemServicoServicoSolicitado oss ON oss.OrdemServicoId = os.Id
+        JOIN ServicoSolicitado ss              ON ss.Id  = oss.ServicoSolicitadoId
+        WHERE os.StatusId != @StatusFinalizada
+          AND os.StatusId != @StatusCancelada
+          AND ss.Sla       IS NOT NULL
+          {filtro}
+        GROUP BY
+            os.Id, os.Numero, os.DataSolicitacao, os.TipoOS, so.Descricao
+        HAVING DATEADD(DAY, MIN(ss.Sla), os.DataSolicitacao) < @Hoje
+        ORDER BY DiasAtraso DESC
+    ";
 
         var result = await connection.QueryAsync<DashboardOsAtrasadaDto>(
             new CommandDefinition(sql, parametros, cancellationToken: ct)

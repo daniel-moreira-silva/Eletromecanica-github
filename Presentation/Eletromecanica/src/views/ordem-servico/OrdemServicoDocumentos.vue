@@ -1,9 +1,9 @@
-<script setup>
-/* global defineProps, defineEmits, defineExpose */
+﻿<script setup>
 import { ref, inject, computed, watch, onBeforeUnmount } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import LoadingOverlay from '@/components/base/LoadingOverlay.vue'
 import DocumentoService from '@/services/configuracoes/documento-service'
+import DocumentoLightbox from '@/components/common/DocumentoLightbox.vue'
 
 const ENTIDADE_TIPO_ORDEM_SERVICO = 1
 
@@ -47,6 +47,30 @@ const tagSearch = ref('')
 const tagNova = ref('')
 const documentoParaTag = ref(null)
 
+// Abas de separação
+const abaAtiva = ref('todos') // 'todos' | 'fotos' | 'documentos'
+
+const fotosOrdemServico = computed(() =>
+  [...documentosOrdemServico.value.filter(d => d.fotoExecucao === true)]
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+)
+const arquivosOrdemServico = computed(() => documentosOrdemServico.value.filter(d => d.fotoExecucao !== true))
+
+const listaAtivaDocumentos = computed(() => {
+  if (abaAtiva.value === 'fotos') return fotosOrdemServico.value
+  if (abaAtiva.value === 'documentos') return arquivosOrdemServico.value
+  return documentosOrdemServico.value
+})
+
+const dragAtivado = computed(() => abaAtiva.value === 'todos')
+
+const abasDisponiveis = computed(() => [
+  { value: 'todos',      label: 'Todos',               icon: 'list',        count: documentosOrdemServico.value.length },
+  { value: 'fotos',      label: 'Fotos da execução',  icon: 'camera',      count: fotosOrdemServico.value.length },
+  { value: 'documentos', label: 'Documentos',          icon: 'folder-open', count: arquivosOrdemServico.value.length },
+])
+
+// drag-and-drop indexes
 const dragDocumentoId = ref(null)
 const dragDocumentoOrigemIndex = ref(null)
 const reordenandoDocumentos = ref(false)
@@ -126,6 +150,8 @@ const documentoEdicao = ref({
   nomeOriginal: '',
   descricao: '',
   publico: true,
+  fotoExecucao: false,
+  imagem: false,
 })
 
 const ExtensoesDocumentoOS = [
@@ -276,6 +302,7 @@ function adicionarNaFila(files) {
       localId: gerarIdLocal(),
       descricao: '',
       publico: true,
+      fotoExecucao: false,
       ordem: 0,
       nomeArquivo: file?.name || '',
       extensao,
@@ -328,6 +355,8 @@ async function listarDocumentos() {
       ...x,
       imagem: isImagem(mime(x)),
       pdf: isPdf(mime(x)),
+      audio: (mime(x) || '').startsWith('audio/'),
+      video: (mime(x) || '').startsWith('video/'),
       previewUrl: null,
     }))
     listVersion.value++
@@ -381,6 +410,7 @@ async function enviarFila({ somenteComErro = false } = {}) {
     form.append('EntidadeTipo', ENTIDADE_TIPO_ORDEM_SERVICO)
     form.append('Descricao', item.descricao?.trim() || '')
     form.append('Publico', !!item.publico)
+    form.append('FotoExecucao', !!item.fotoExecucao)
     form.append('Ordem', proximaOrdem)
     form.append('Arquivo', item.arquivo, item.nomeArquivo)
 
@@ -408,6 +438,8 @@ function abrirEdicao(item) {
     nomeOriginal: item?.nomeOriginal ?? '',
     descricao: item?.descricao ?? '',
     publico: item?.publico !== false,
+    fotoExecucao: item?.fotoExecucao === true,
+    imagem: item?.imagem === true,
   }
   documentoEdicaoDialog.value = true
 }
@@ -423,6 +455,7 @@ async function salvarEdicao() {
     nomeOriginal: documentoEdicao.value.nomeOriginal,
     descricao: documentoEdicao.value.descricao?.trim() || '',
     publico: !!documentoEdicao.value.publico,
+    fotoExecucao: documentoEdicao.value.fotoExecucao === true ? true : null,
   }
 
   const result = await documentoService.atualizarDocumento(request)
@@ -485,12 +518,8 @@ async function carregarPreview(item) {
   objectUrls.value.add(url)
 }
 
-async function abrirDocumento(item) {
-  if (!item?.id) return
-
-  if (!item.previewUrl) await carregarPreview(item)
-
-  if (item.previewUrl) window.open(item.previewUrl, '_blank')
+function abrirDocumento(item) {
+  abrirVisualizador(item)
 }
 
 onBeforeUnmount(() => {
@@ -498,7 +527,7 @@ onBeforeUnmount(() => {
   pararAutoScroll()
 })
 
-// ── drag-and-drop reordenação ─────────────────────────────────────────────────
+// drag-and-drop reordenação
 
 function onDragStartDocumento(doc, index) {
   if (reordenandoDocumentos.value) return
@@ -572,7 +601,7 @@ async function onDropDocumentoSalvo(destinoIndex) {
   }
 }
 
-// ── tags ──────────────────────────────────────────────────────────────────────
+// tags
 async function buscarTags(search) {
   const resp = await documentoService.listarTags(search)
   if (resp?.statusCode === 200) {
@@ -634,6 +663,17 @@ watch(
   }
 )
 
+// Lightbox visualizador
+const lightboxAberto = ref(false)
+const lightboxIndice = ref(0)
+
+function abrirVisualizador(doc) {
+  if (!doc?.id) return
+  const idx = listaAtivaDocumentos.value.findIndex(d => d.id === doc.id)
+  lightboxIndice.value = idx >= 0 ? idx : 0
+  lightboxAberto.value = true
+}
+
 defineExpose({ listarDocumentos })
 </script>
 
@@ -670,7 +710,7 @@ defineExpose({ listarDocumentos })
 
           <div class="documentos-header__right">
             <span class="documentos-header__os-label">Nº O.S.</span>
-            <span class="documentos-header__os-value">{{ ordemServico?.codigo || '—' }}</span>
+            <span class="documentos-header__os-value">{{ ordemServico?.codigo || '-' }}</span>
           </div>
         </div>
 
@@ -678,36 +718,57 @@ defineExpose({ listarDocumentos })
           <!-- Documentos cadastrados -->
           <v-col cols="12" lg="7">
             <v-card variant="outlined" class="altura-card">
-              <v-card-title class="text-subtitle-1 d-flex align-center">
-                <font-awesome-icon icon="folder-open" class="text-primary me-2" />
-                Documentos cadastrados
-              </v-card-title>
+              <!-- Abas de tipo -->
+              <div class="documentos-abas-header">
+                <button
+                  v-for="aba in abasDisponiveis"
+                  :key="aba.value"
+                  class="documentos-aba-btn"
+                  :class="{ 'documentos-aba-btn--ativa': abaAtiva === aba.value }"
+                  @click="abaAtiva = aba.value"
+                >
+                  <font-awesome-icon :icon="aba.icon" class="me-1" />
+                  {{ aba.label }}
+                  <span class="documentos-aba-count">{{ aba.count }}</span>
+                </button>
+
+                <div v-if="dragAtivado && documentosOrdemServico.length > 1" class="documentos-aba-hint">
+                  <font-awesome-icon icon="grip-lines" class="me-1" />
+                  Arraste para reordenar
+                </div>
+              </div>
 
               <v-divider />
 
               <v-card-text class="pa-0">
-                <div v-if="!documentosOrdemServico.length" class="pa-4 text-medium-emphasis">
-                  Nenhum documento vinculado a esta ordem de serviço.
+                <div v-if="!listaAtivaDocumentos.length" class="pa-6 d-flex flex-column align-center text-medium-emphasis gap-2">
+                  <font-awesome-icon :icon="abaAtiva === 'fotos' ? 'camera' : abaAtiva === 'documentos' ? 'folder-open' : 'file-alt'" style="font-size:32px; opacity:0.3" />
+                  <span class="text-body-2">
+                    {{ abaAtiva === 'fotos' ? 'Nenhuma foto anexada.' : abaAtiva === 'documentos' ? 'Nenhum arquivo anexado.' : 'Nenhum documento vinculado a esta ordem de serviço.' }}
+                  </span>
                 </div>
 
                 <div v-else class="documento-lista" ref="documentoListaRef" @dragover="handleDragOverLista" @drop="onDropLista">
-                  <div class="documento-lista-grid">
+                  <div
+                    class="documento-lista-grid"
+                    :class="{ 'documento-lista-grid--fotos': abaAtiva === 'fotos' }"
+                  >
                     <div
-                      v-for="(doc, index) in documentosOrdemServico"
+                      v-for="(doc, index) in listaAtivaDocumentos"
                       :key="`${doc.id}-${listVersion}`"
                       class="documento-card"
                       :class="{
                         'documento-card--dragging': isDragging(doc),
                         'documento-card--dragover': isDragOver(doc),
-                        'documento-card--reordering': !!dragDocumentoId && !isDragging(doc),
+                        'documento-card--reordering': dragAtivado && !!dragDocumentoId && !isDragging(doc),
                       }"
-                      draggable="true"
-                      @dragstart="onDragStartDocumento(doc, index)"
+                      :draggable="dragAtivado"
+                      @dragstart="dragAtivado && onDragStartDocumento(doc, index)"
                       @dragend="onDragEndDocumento"
-                      @dragenter.prevent="onDragEnterDocumento(doc)"
+                      @dragenter.prevent="dragAtivado && onDragEnterDocumento(doc)"
                       @dragleave="onDragLeaveDocumento(doc)"
                       @dragover.prevent
-                      @drop.stop="onDropDocumentoSalvo(index)"
+                      @drop.stop="dragAtivado && onDropDocumentoSalvo(index)"
                     >
                       <!-- Preview -->
                       <div
@@ -837,7 +898,7 @@ defineExpose({ listarDocumentos })
                       </span>
                     </div>
                     <div class="upload-subtext">
-                      PDF, documento, planilhas, imagens e arquivos de áudio e vídeo • até 20MB por arquivo
+                      PDF, documento, planilhas, imagens e arquivos de áudio e vídeo até 20MB por arquivo
                     </div>
                   </div>
                 </div>
@@ -923,6 +984,23 @@ defineExpose({ listarDocumentos })
                         class="fila-documento-publico"
                       />
 
+                      <div v-if="doc.ehImagem" class="fila-documento-foto-toggle">
+                        <v-switch
+                          v-model="doc.fotoExecucao"
+                          color="primary"
+                          density="compact"
+                          hide-details
+                          class="fila-documento-switch ml-2"
+                        >
+                          <template #label>
+                            <font-awesome-icon size="large" icon="camera" class="fa-lg text-primary mr-1" />
+                            <div class="fila-foto-label">
+                              Foto de execução
+                            </div>
+                          </template>
+                        </v-switch>
+                      </div>
+
                       <div v-if="doc.mensagemErro" class="upload-error mt-2">
                         {{ doc.mensagemErro }}
                       </div>
@@ -1001,7 +1079,24 @@ defineExpose({ listarDocumentos })
             variant="outlined"
             color="grey-darken-1"
             base-color="grey-darken-1"
+            class="mb-2"
           />
+
+          <div v-if="documentoEdicao.imagem" class="d-flex align-center gap-2 pa-2 rounded foto-execucao-box"
+            :class="{ 'foto-execucao-box--ativa': documentoEdicao.fotoExecucao }">
+            <font-awesome-icon icon="camera" class="mr-2" />
+            <div class="flex-1">
+              <div class="text-body-2 font-weight-medium">Foto de execução</div>
+              <div class="text-caption text-medium-emphasis">Marca este arquivo como foto da execução da O.S.</div>
+            </div>
+            <v-switch
+              v-model="documentoEdicao.fotoExecucao"
+              color="primary"
+              density="compact"
+              hide-details
+              class="mr-2"
+            />
+          </div>
         </v-form>
       </v-card-text>
 
@@ -1020,7 +1115,7 @@ defineExpose({ listarDocumentos })
     <v-card class="pa-2">
       <v-card-title>
         <font-awesome-icon icon="trash" class="text-primary me-2" />
-        Excluir documento?
+        Excluir documento ?
         <font-awesome-icon icon="xmark" @click="excluirDocumentoDialog = false"
           class="text-close float-right icon-clicavel me-2" />
       </v-card-title>
@@ -1117,6 +1212,14 @@ defineExpose({ listarDocumentos })
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <DocumentoLightbox
+    v-model="lightboxAberto"
+    :documentos="listaAtivaDocumentos"
+    :indice="lightboxIndice"
+    :fn-carregar-preview="carregarPreview"
+    :fn-baixar="baixarDocumento"
+  />
 </template>
 
 <style scoped>
@@ -1467,6 +1570,41 @@ defineExpose({ listarDocumentos })
   display: block !important;
 }
 
+.fila-documento-foto-toggle {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(var(--v-theme-primary), 0.05);
+  border: 1px solid rgba(var(--v-theme-primary), 0.15);
+}
+
+.fila-documento-switch {
+  flex-shrink: 0;
+}
+
+.fila-foto-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgb(var(--v-theme-primary));
+}
+
+/* Box foto execução no dialog de edição */
+.foto-execucao-box {
+  border: 1px solid rgba(0,0,0,0.1);
+  background: #FAFAFA;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.foto-execucao-box--ativa {
+  background: rgba(var(--v-theme-primary), 0.06);
+  border-color: rgba(var(--v-theme-primary), 0.35);
+}
+
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
 .upload-error {
   font-size: 12px;
   color: rgb(var(--v-theme-error));
@@ -1581,4 +1719,84 @@ defineExpose({ listarDocumentos })
     min-width: unset;
   }
 }
+
+/* â”€â”€ Abas de separação â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.documentos-abas-header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px 0;
+  background: #FAFAFA;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  flex-wrap: wrap;
+}
+
+.documentos-aba-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 6px 6px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.55);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.documentos-aba-btn:hover {
+  color: rgb(var(--v-theme-primary));
+  background: rgba(var(--v-theme-primary), 0.05);
+}
+
+.documentos-aba-btn--ativa {
+  color: rgb(var(--v-theme-primary));
+  border-bottom-color: rgb(var(--v-theme-primary));
+  font-weight: 600;
+}
+
+.documentos-aba-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.08);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.documentos-aba-btn--ativa .documentos-aba-count {
+  background: rgba(var(--v-theme-primary), 0.15);
+  color: rgb(var(--v-theme-primary));
+}
+
+.documentos-aba-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+  font-style: italic;
+}
+
+/* Grid modo fotos: 2 colunas com preview maior */
+.documento-lista-grid--fotos {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.documento-lista-grid--fotos .documento-card-preview {
+  height: 200px;
+}
+
+/* Lightbox styles live in DocumentoLightbox.vue */
+
 </style>

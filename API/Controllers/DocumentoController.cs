@@ -87,7 +87,7 @@ public class DocumentoController(IDocumentoService service, IOptions<DocumentSto
     {
         try
         {
-            var result = await service.UpdateDocumentoAsync(request.Id, request.NomeOriginal, request.Descricao, request.Publico, cancellationToken);
+            var result = await service.UpdateDocumentoAsync(request.Id, request.NomeOriginal, request.Descricao, request.Publico, request.FotoExecucao, cancellationToken);
 
             if (result)
                 return Ok(new SuccessMessage("Documento atualizado com sucesso.", null));

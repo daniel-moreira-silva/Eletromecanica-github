@@ -6,4 +6,5 @@ public class AtualizarDocumentoRequest
     public string NomeOriginal { get; set; } = default!;
     public string Descricao { get; set; } = default!;
     public bool Publico { get; set; } = default!;
+    public bool? FotoExecucao { get; set; }
 }

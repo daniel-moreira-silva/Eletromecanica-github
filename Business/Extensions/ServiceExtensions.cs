@@ -21,6 +21,7 @@ public static class ServiceExtensions
         services.AddScoped<ISetorService, SetorService>();
         services.AddScoped<ITipoFuncionarioService, TipoFuncionarioService>();
         services.AddScoped<IFuncionarioService, FuncionarioService>();
+        services.AddScoped<IMaterialService, MaterialService>();
 
         return services;
     }

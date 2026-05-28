@@ -27,6 +27,7 @@ public static class ServiceExtension
         services.AddScoped<ISetorRepository, SetorRepository>();
         services.AddScoped<ITipoFuncionarioRepository, TipoFuncionarioRepository>();
         services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
+        services.AddScoped<IMaterialRepository, MaterialRepository>();
 
         services.AddRefitClient<IGoogleMapClient>()
             .ConfigureHttpClient(client =>

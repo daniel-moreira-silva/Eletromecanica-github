@@ -1,5 +1,6 @@
 <script setup>
-import { ref, inject, watch } from "vue";
+import { ref, watch } from "vue";
+import { inject } from "vue";
 
 import Grid from "@/components/common/GridComponent.vue";
 import Paginacao from "@/components/common/PaginacaoComponent.vue";
@@ -7,7 +8,7 @@ import Loading from "@/components/base/LoadingOverlay.vue";
 import BaseButton from "@/components/base/BaseButton.vue";
 import Snackbar from "@/components/base/Snackbar.vue";
 
-import ServicoSolicitadoService from "@/services/configuracoes/servico-solicitado-service.js";
+import MaterialService from "@/services/configuracoes/material-service.js";
 
 import { usePermissoesTela } from "@/composables/usePermissoesTela";
 import { usePadraoPermissao } from "@/composables/usePadraoPermissao";
@@ -17,7 +18,7 @@ const headerPadrao = inject("headerPadrao");
 const chaveSeguranca = inject("chaveSeguranca");
 const usuarioSeguranca = inject("usuarioSeguranca");
 
-const servicoSolicitadoService = new ServicoSolicitadoService(
+const materialService = new MaterialService(
   endpoint,
   headerPadrao,
   chaveSeguranca,
@@ -41,15 +42,6 @@ const loading = ref(false);
 const retorno = ref(false);
 const mensagemRetorno = ref(null);
 const sucesso = ref(true);
-
-const tabServicoSolicitado = ref("dados");
-
-const prioridadeOpcoes = [
-  { text: "Baixa", value: 0 },
-  { text: "Média", value: 1 },
-  { text: "Alta", value: 2 },
-  { text: "Crítica", value: 3 },
-];
 
 const { hasPermission } = usePermissoesTela();
 const canRead = hasPermission("Ler");
@@ -107,7 +99,7 @@ async function salvar() {
   let request = JSON.parse(JSON.stringify(item.value));
 
   loading.value = true;
-  let resultado = await servicoSolicitadoService.salvar(request);
+  let resultado = await materialService.salvar(request);
   loading.value = false;
 
   retorno.value = true;
@@ -131,7 +123,7 @@ async function atualizar() {
   let request = JSON.parse(JSON.stringify(item.value));
 
   loading.value = true;
-  let resultado = await servicoSolicitadoService.atualizar(request);
+  let resultado = await materialService.atualizar(request);
   loading.value = false;
 
   retorno.value = true;
@@ -154,7 +146,7 @@ async function alterarStatus({ item: itemGrid, valor }) {
     loading.value = true;
 
     const id = itemGrid?.id;
-    const resp = await servicoSolicitadoService.atualizarStatus(id, valor);
+    const resp = await materialService.atualizarStatus(id, valor);
 
     loading.value = false;
     retorno.value = true;
@@ -182,8 +174,8 @@ const filtro = ref({
   codigo: null,
   descricao: null,
   ativo: null,
-  ordenarPor: "Codigo", // enum backend: Codigo | Descricao
-  ordem: "Asc", // enum backend: Asc | Desc
+  ordenarPor: "Descricao",
+  ordem: "Asc",
   todos: null,
 });
 
@@ -222,7 +214,7 @@ async function listarItens() {
   modal.value = false;
 
   loading.value = true;
-  let result = await servicoSolicitadoService.listar(filtro.value);
+  let result = await materialService.listar(filtro.value);
   loading.value = false;
 
   if (result?.statusCode === 200) {
@@ -265,18 +257,8 @@ const fields = ref([
     ocultarResponsivo: false,
   },
   {
-    descricao: "SLA",
-    valor: "sla",
-    selecionado: null,
-    editavel: true,
-    filtravel: false,
-    tipo: "texto",
-    ordenado: null,
-    ocultarResponsivo: false,
-  },
-  {
-    descricao: "Prioridade",
-    valor: "prioridade",
+    descricao: "Unidade de Medida",
+    valor: "unidadeMedida",
     selecionado: null,
     editavel: true,
     filtravel: false,
@@ -297,7 +279,7 @@ const fields = ref([
 ]);
 
 watch(modalDadosMestre, (abriu) => {
-  if (abriu) tabServicoSolicitado.value = "dados";
+  if (!abriu) item.value = {};
 });
 </script>
 
@@ -451,7 +433,7 @@ watch(modalDadosMestre, (abriu) => {
                   class="text-primary mr-2 fa-lg"
                 />
                 <span class="title black--text">
-                  {{ inserindo ? "Inserir Serviço Solicitado" : "Editar Serviço Solicitado" }}
+                  {{ inserindo ? "Inserir Material" : "Editar Material" }}
                 </span>
                 <v-spacer></v-spacer>
                 <font-awesome-icon
@@ -461,84 +443,54 @@ watch(modalDadosMestre, (abriu) => {
                 />
               </div>
 
-              <v-tabs slider-transition="grow" color="primary" v-model="tabServicoSolicitado" density="compact">
-                <v-tab value="dados" text="Dados"></v-tab>
-                <v-tab value="checklist" text="Check List"></v-tab>
-              </v-tabs>
+              <v-divider class="pb-4"></v-divider>
 
-              <v-tabs-window v-model="tabServicoSolicitado">
-                <v-tabs-window-item value="dados">
-                  <v-form ref="formulario">
-                    <v-container class="pa-3 pt-6 container-modal">
-                      <v-row>
-                        <v-col cols="12" class="pa-1 mt-2">
-                          <v-text-field
-                            v-model="item.codigo"
-                            label="Código"
-                            clearable
-                            density="compact"
-                            variant="outlined"
-                            color="grey-darken-1"
-                            base-color="grey-darken-1"
-                            :rules="[(v) => !!v || 'Código é um campo obrigatório']"
-                          />
-                        </v-col>
-                      </v-row>
-    
-                      <v-row>
-                        <v-col cols="12" class="pa-1">
-                          <v-text-field
-                            v-model="item.descricao"
-                            label="Descrição"
-                            clearable
-                            density="compact"
-                            variant="outlined"
-                            color="grey-darken-1"
-                            base-color="grey-darken-1"
-                            :rules="[(v) => !!v || 'Descrição é um campo obrigatório']"
-                          />
-                        </v-col>
-                      </v-row>
+              <v-form ref="formulario">
+                <v-container class="pa-3 pt-2 container-modal">
+                  <v-row>
+                    <v-col cols="12" class="pa-1 mt-2">
+                      <v-text-field
+                        v-model="item.codigo"
+                        label="Código"
+                        clearable
+                        density="compact"
+                        variant="outlined"
+                        color="grey-darken-1"
+                        base-color="grey-darken-1"
+                      />
+                    </v-col>
+                  </v-row>
 
-                      <v-row>
-                        <v-col cols="6" class="pa-1">
-                          <v-select
-                            v-model="item.prioridade"
-                            :items="prioridadeOpcoes"
-                            item-title="text"
-                            item-value="value"
-                            label="Prioridade"
-                            density="compact"
-                            variant="outlined"
-                            color="grey-darken-1"
-                            base-color="grey-darken-1"
-                            :rules="[(v) => v !== null && v !== undefined && v !== '' || 'Prioridade é um campo obrigatório']"
-                          />
-                        </v-col>
+                  <v-row>
+                    <v-col cols="12" class="pa-1">
+                      <v-text-field
+                        v-model="item.descricao"
+                        label="Descrição"
+                        clearable
+                        density="compact"
+                        variant="outlined"
+                        color="grey-darken-1"
+                        base-color="grey-darken-1"
+                        :rules="[(v) => !!v || 'Descrição é um campo obrigatório']"
+                      />
+                    </v-col>
+                  </v-row>
 
-                        <v-col cols="6" class="pa-1">
-                          <v-text-field
-                            v-model.number="item.sla"
-                            label="SLA (horas)"
-                            type="number"
-                            min="0"
-                            density="compact"
-                            variant="outlined"
-                            color="grey-darken-1"
-                            base-color="grey-darken-1"
-                            :rules="[(v) => (v !== null && v !== undefined && v !== '') || 'SLA é um campo obrigatório', (v) => v >= 0 || 'SLA deve ser maior ou igual a zero']"
-                          />
-                        </v-col>
-                      </v-row>
-                    </v-container>
-                  </v-form>
-                </v-tabs-window-item>
-                <v-tabs-window-item value="checklist">
-                  <div>
-                  </div>
-                </v-tabs-window-item>
-              </v-tabs-window>
-
+                  <v-row>
+                    <v-col cols="12" class="pa-1">
+                      <v-text-field
+                        v-model="item.unidadeMedida"
+                        label="Unidade de Medida"
+                        clearable
+                        density="compact"
+                        variant="outlined"
+                        color="grey-darken-1"
+                        base-color="grey-darken-1"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-form>
 
               <v-card-actions class="pt-0">
                 <v-spacer></v-spacer>

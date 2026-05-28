@@ -12,6 +12,7 @@ public class DocumentoDto
     public string? Descricao { get; set; }
     public bool? Publico { get; set; }
     public int? Ordem { get; set; }
+    public bool? FotoExecucao { get; set; }
     public string? Caminho { get; set; }
     public List<TagDocumento> Tags { get; set; } = [];
 
@@ -29,6 +30,7 @@ public class DocumentoDto
             DataCriacao = document.DataCriacao,
             Publico = document.Publico,
             Ordem = document.Ordem,
+            FotoExecucao = document.FotoExecucao,
             Caminho = document.CaminhoRelativo,
             Descricao = document.Descricao,
         };
@@ -46,6 +48,7 @@ public class DocumentoDto
             DataCriacao = dto.DataCriacao,
             Publico = dto.Publico ?? true,
             Ordem = dto.Ordem,
+            FotoExecucao = dto.FotoExecucao,
             CaminhoRelativo = dto.Caminho ?? string.Empty,
             Descricao = dto.Descricao,
         };

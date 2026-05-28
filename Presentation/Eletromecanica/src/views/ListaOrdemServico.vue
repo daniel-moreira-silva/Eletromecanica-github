@@ -1,5 +1,4 @@
 <script setup>
-/* global defineProps, defineEmits */
 import { ref, computed, watch, inject, onMounted } from 'vue'
 import Grid from '@/components/common/GridComponent.vue'
 import Paginacao from '@/components/common/PaginacaoComponent.vue'
@@ -8,9 +7,12 @@ import { useRouter } from 'vue-router'
 import OrdemServicoService from '@/services/ordem-servico/ordem-servico-service'
 import MotivoCancelamentoService from '@/services/configuracoes/motivo-cancelamento-service'
 import FuncionarioService from '@/services/configuracoes/funcionario-service'
+import ServicoSolicitadoService from '@/services/configuracoes/servico-solicitado-service'
+import ServicoExecutadoService from '@/services/configuracoes/servico-executado-service'
 import Loading from '@/components/base/LoadingOverlay.vue'
 import Snackbar from '@/components/base/Snackbar.vue'
 import OrdemServicoDocumentos from '@/views/ordem-servico/OrdemServicoDocumentos.vue'
+import NovaOrdemServico from '@/views/NovaOrdemServico.vue'
 
 const endpoint = inject('endpoint')
 const headerPadrao = inject('headerPadrao')
@@ -32,6 +34,20 @@ const motivoCancelamentoService = new MotivoCancelamentoService(
 )
 
 const funcionarioService = new FuncionarioService(
+  endpoint,
+  headerPadrao,
+  chaveSeguranca,
+  usuarioSeguranca
+)
+
+const servicoSolicitadoService = new ServicoSolicitadoService(
+  endpoint,
+  headerPadrao,
+  chaveSeguranca,
+  usuarioSeguranca
+)
+
+const servicoExecutadoService = new ServicoExecutadoService(
   endpoint,
   headerPadrao,
   chaveSeguranca,
@@ -64,8 +80,37 @@ const mensagemRetorno = ref(null)
 const sucesso = ref(true)
 const retorno = ref(null)
 
-// filter modal inputs
-const filtrosLocal = ref({ numero: null, todos: null, ordenarPor: 'Codigo', ordem: 'Asc' })
+// filter modal inputs — initialized from filtrosGlobais so filters persist on tab switch
+const filtrosLocal = ref({
+  numero: props.filtrosGlobais?.numero || null,
+  todos: props.filtrosGlobais?.todos || null,
+  nome: props.filtrosGlobais?.nome || null,
+  numeroDocumento: props.filtrosGlobais?.numeroDocumento || null,
+  endereco: props.filtrosGlobais?.endereco || null,
+  bairro: props.filtrosGlobais?.bairro || null,
+  pontoReferencia: props.filtrosGlobais?.pontoReferencia || null,
+  // TODO: adicionar regiaoId quando o serviço de regiões for implementado no frontend
+  // TODO: adicionar agendamentoId quando o serviço de agendamentos for implementado no frontend
+  servicoSolicitadoId: props.filtrosGlobais?.servicoSolicitadoId || [],
+  servicoExecutadoId: props.filtrosGlobais?.servicoExecutadoId || [],
+  motivoCancelamentoId: props.filtrosGlobais?.motivoCancelamentoId || [],
+  dataSolicitacaoInicio: props.filtrosGlobais?.dataSolicitacaoInicio || null,
+  dataSolicitacaoFim: props.filtrosGlobais?.dataSolicitacaoFim || null,
+  dataAgendamentoInicio: props.filtrosGlobais?.dataAgendamentoInicio || null,
+  dataAgendamentoFim: props.filtrosGlobais?.dataAgendamentoFim || null,
+  dataDespachoInicio: props.filtrosGlobais?.dataDespachoInicio || null,
+  dataDespachoFim: props.filtrosGlobais?.dataDespachoFim || null,
+  dataFinalizacaoInicio: props.filtrosGlobais?.dataFinalizacaoInicio || null,
+  dataFinalizacaoFim: props.filtrosGlobais?.dataFinalizacaoFim || null,
+  dataCancelamentoInicio: props.filtrosGlobais?.dataCancelamentoInicio || null,
+  dataCancelamentoFim: props.filtrosGlobais?.dataCancelamentoFim || null,
+  dataDespachoProgramadoInicio: props.filtrosGlobais?.dataDespachoProgramadoInicio || null,
+  dataDespachoProgramadoFim: props.filtrosGlobais?.dataDespachoProgramadoFim || null,
+  dataParalisacaoInicio: props.filtrosGlobais?.dataParalisacaoInicio || null,
+  dataParalisacaoFim: props.filtrosGlobais?.dataParalisacaoFim || null,
+  ordenarPor: props.filtrosGlobais?.ordenarPor || 'Codigo',
+  ordem: props.filtrosGlobais?.ordem || 'Asc',
+})
 
 // iniciar dialog
 const iniciarDialog = ref(false)
@@ -86,9 +131,32 @@ const cancelamentoMotivoId = ref(null)
 const cancelamentoObservacao = ref('')
 const listaMotivosCancelamento = ref([])
 
+// listas para filtros
+const listaServicosSolicitados = ref([])
+const listaServicosExecutados = ref([])
+
 // documentos dialog
 const documentosDialog = ref(false)
 const ordemServicoDocumentosAtual = ref(null)
+
+// sub-OS
+const subOsConfirmDialog = ref(false)
+const subOsConfirmItem = ref(null)
+const subOsDialog = ref(false)
+const subOsOrdemServicoId = ref(null)
+const subOsProtocolo = ref(null)
+const subOsEIrmao = ref(false)
+
+// prioridade dialog
+const prioridadeDialog = ref(false)
+const prioridadeConfirmDialog = ref(false)
+const prioridadeSelecionada = ref(null)
+const listaPrioridades = [
+  { valor: 0, descricao: 'Baixa' },
+  { valor: 1, descricao: 'Média' },
+  { valor: 2, descricao: 'Alta' },
+  { valor: 3, descricao: 'Crítica' },
+]
 
 // despacho programado dialog
 const despachoDialog = ref(false)
@@ -185,6 +253,8 @@ function getOpcoesAcoesRegistro() {
       { descricao: 'Programar ordem serviço', icone: 'calendar-alt', classe: 'text-left' },
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
       { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
+      { descricao: 'Atualizar prioridade', icone: 'flag', classe: 'text-left' },
+      { descricao: 'Gerar Sub-OS', icone: 'plus', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -195,6 +265,8 @@ function getOpcoesAcoesRegistro() {
       { descricao: 'Devolver ordem de serviço', icone: 'reply', classe: 'text-left' },
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
       { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
+      { descricao: 'Atualizar prioridade', icone: 'flag', classe: 'text-left' },
+      { descricao: 'Gerar Sub-OS', icone: 'plus', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -205,6 +277,7 @@ function getOpcoesAcoesRegistro() {
       { descricao: 'Devolver ordem de serviço', icone: 'reply', classe: 'text-left' },
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
       { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
+      { descricao: 'Gerar Sub-OS', icone: 'plus', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -214,6 +287,7 @@ function getOpcoesAcoesRegistro() {
     return [
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
       { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
+      { descricao: 'Gerar Sub-OS', icone: 'plus', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
       { descricao: 'Finalizar ordem serviço', icone: 'flag-checkered', classe: 'text-left' },
     ]
@@ -223,6 +297,7 @@ function getOpcoesAcoesRegistro() {
     return [
       { descricao: 'Detalhar ordem serviço', icone: 'info-circle', classe: 'text-left' },
       { descricao: 'Documentos da O.S.', icone: 'file-alt', classe: 'text-left' },
+      { descricao: 'Gerar Sub-OS', icone: 'plus', classe: 'text-left' },
       { descricao: 'Cancelar ordem serviço', icone: 'times-circle', classe: 'text-left' },
     ]
   }
@@ -251,7 +326,7 @@ function getEstadoOrdenacaoColuna(campoOrdenacao) {
 const fields = computed(() => {
   const cols = [
     { descricao: 'Nº O.S.', valor: 'codigo', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Codigo'), campoOrdenacao: 'Codigo' },
-    { descricao: 'Ações', valor: 'ellipsis', tipo: 'menu', filtravel: false, ordenado: null, class: 'text-left', desabilitarOrdenacao: true, opcoesMenu: getOpcoesAcoesRegistro() },
+    { descricao: 'Ações', valor: 'gears', tipo: 'menu', filtravel: false, ordenado: null, class: 'text-left', desabilitarOrdenacao: true, opcoesMenu: getOpcoesAcoesRegistro() },
     { descricao: 'Endereço', valor: 'endereco', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Endereco'), campoOrdenacao: 'Endereco' },
     { descricao: 'Prioridade', valor: 'prioridadeDescricao', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('Prioridade'), campoOrdenacao: 'Prioridade' },
     { descricao: 'Data Solicitação', valor: 'dataSolicitacaoFormatada', tipo: 'texto', filtravel: false, ordenado: getEstadoOrdenacaoColuna('DataSolicitacao'), campoOrdenacao: 'DataSolicitacao' },
@@ -316,13 +391,17 @@ watch(
 onMounted(async () => {
   if (props.tabState && !props.tabState.loaded) listarItens()
 
-  const [respMotivos, respFuncionarios] = await Promise.all([
+  const [respMotivos, respFuncionarios, respServicosSolicitados, respServicosExecutados] = await Promise.all([
     motivoCancelamentoService.buscarTodos(),
     funcionarioService.buscarTodos(),
+    servicoSolicitadoService.buscarTodos(),
+    servicoExecutadoService.buscarTodos(),
   ])
 
   if (respMotivos?.statusCode === 200) listaMotivosCancelamento.value = respMotivos.data?.data || []
   if (respFuncionarios?.statusCode === 200) listaFuncionarios.value = respFuncionarios.data?.data || []
+  if (respServicosSolicitados?.statusCode === 200) listaServicosSolicitados.value = respServicosSolicitados.data?.data || []
+  if (respServicosExecutados?.statusCode === 200) listaServicosExecutados.value = respServicosExecutados.data?.data || []
 })
 
 // ── pagination ────────────────────────────────────────────────────────────────
@@ -339,6 +418,28 @@ function filtrar() {
   emit('aplicarFiltrosGlobais', {
     numero: filtrosLocal.value.numero || null,
     todos: filtrosLocal.value.todos || null,
+    nome: filtrosLocal.value.nome || null,
+    numeroDocumento: filtrosLocal.value.numeroDocumento || null,
+    endereco: filtrosLocal.value.endereco || null,
+    bairro: filtrosLocal.value.bairro || null,
+    pontoReferencia: filtrosLocal.value.pontoReferencia || null,
+    servicoSolicitadoId: filtrosLocal.value.servicoSolicitadoId?.length ? filtrosLocal.value.servicoSolicitadoId : null,
+    servicoExecutadoId: filtrosLocal.value.servicoExecutadoId?.length ? filtrosLocal.value.servicoExecutadoId : null,
+    motivoCancelamentoId: filtrosLocal.value.motivoCancelamentoId?.length ? filtrosLocal.value.motivoCancelamentoId : null,
+    dataSolicitacaoInicio: filtrosLocal.value.dataSolicitacaoInicio || null,
+    dataSolicitacaoFim: filtrosLocal.value.dataSolicitacaoFim || null,
+    dataAgendamentoInicio: filtrosLocal.value.dataAgendamentoInicio || null,
+    dataAgendamentoFim: filtrosLocal.value.dataAgendamentoFim || null,
+    dataDespachoInicio: filtrosLocal.value.dataDespachoInicio || null,
+    dataDespachoFim: filtrosLocal.value.dataDespachoFim || null,
+    dataFinalizacaoInicio: filtrosLocal.value.dataFinalizacaoInicio || null,
+    dataFinalizacaoFim: filtrosLocal.value.dataFinalizacaoFim || null,
+    dataCancelamentoInicio: filtrosLocal.value.dataCancelamentoInicio || null,
+    dataCancelamentoFim: filtrosLocal.value.dataCancelamentoFim || null,
+    dataDespachoProgramadoInicio: filtrosLocal.value.dataDespachoProgramadoInicio || null,
+    dataDespachoProgramadoFim: filtrosLocal.value.dataDespachoProgramadoFim || null,
+    dataParalisacaoInicio: filtrosLocal.value.dataParalisacaoInicio || null,
+    dataParalisacaoFim: filtrosLocal.value.dataParalisacaoFim || null,
     ordenarPor: filtrosLocal.value.ordenarPor || null,
     ordem: filtrosLocal.value.ordem || null,
   })
@@ -346,7 +447,34 @@ function filtrar() {
 }
 
 function limparFiltro() {
-  filtrosLocal.value = { numero: null, todos: null, ordenarPor: null, ordem: null }
+  filtrosLocal.value = {
+    numero: null,
+    todos: null,
+    nome: null,
+    numeroDocumento: null,
+    endereco: null,
+    bairro: null,
+    pontoReferencia: null,
+    servicoSolicitadoId: [],
+    servicoExecutadoId: [],
+    motivoCancelamentoId: [],
+    dataSolicitacaoInicio: null,
+    dataSolicitacaoFim: null,
+    dataAgendamentoInicio: null,
+    dataAgendamentoFim: null,
+    dataDespachoInicio: null,
+    dataDespachoFim: null,
+    dataFinalizacaoInicio: null,
+    dataFinalizacaoFim: null,
+    dataCancelamentoInicio: null,
+    dataCancelamentoFim: null,
+    dataDespachoProgramadoInicio: null,
+    dataDespachoProgramadoFim: null,
+    dataParalisacaoInicio: null,
+    dataParalisacaoFim: null,
+    ordenarPor: 'Codigo',
+    ordem: 'Asc',
+  }
 }
 
 // ── form resets ───────────────────────────────────────────────────────────────
@@ -368,6 +496,10 @@ function resetDespachoForm() {
   despachoFuncionarioId.value = null
   despachoDataHora.value = null
   searchDespachoFuncionario.value = ''
+}
+
+function resetPrioridadeForm() {
+  prioridadeSelecionada.value = null
 }
 
 // ── helper: set currentItem ───────────────────────────────────────────────────
@@ -690,6 +822,43 @@ async function programarDespacho() {
   }
 }
 
+// ── sub-OS ────────────────────────────────────────────────────────────────────
+
+// Código da OS pai para exibição (sempre SubOS=0 do grupo)
+function codigoPaiDoItem(item) {
+  return item?.numero && item?.ano ? `${item.numero}/${item.ano}/0` : '—'
+}
+
+function abrirSubOs(item) {
+  subOsConfirmItem.value = item
+  subOsEIrmao.value = (item?.subOS ?? 0) > 0
+  subOsConfirmDialog.value = true
+}
+
+function confirmarGerarSubOs() {
+  const item = subOsConfirmItem.value
+  // Se a OS selecionada já é uma sub-OS, passa o ID da OS pai para criar como irmão
+  subOsOrdemServicoId.value = item?.ordemServicoPaiId || item?.id || null
+  subOsProtocolo.value = codigoPaiDoItem(item)
+  subOsConfirmDialog.value = false
+  subOsDialog.value = true
+}
+
+function fecharSubOs() {
+  subOsDialog.value = false
+  subOsOrdemServicoId.value = null
+  subOsProtocolo.value = null
+  subOsConfirmItem.value = null
+}
+
+function handleSubOSSalva() {
+  fecharSubOs()
+  emit('recarregarTabs')
+  mensagemRetorno.value = 'Sub-OS criada com sucesso.'
+  sucesso.value = true
+  retorno.value = true
+}
+
 // ── grid event handlers ───────────────────────────────────────────────────────
 async function handleOptionClick({ item, opcao }) {
   if (opcao.descricao === 'Iniciar ordem serviço') {
@@ -736,6 +905,48 @@ async function handleOptionClick({ item, opcao }) {
       servico: item?.servico ?? '',
     }
     documentosDialog.value = true
+  } else if (opcao.descricao === 'Atualizar prioridade') {
+    setCurrentItem(item)
+    resetPrioridadeForm()
+    prioridadeSelecionada.value = item?.prioridade ?? null
+    prioridadeDialog.value = true
+  } else if (opcao.descricao === 'Gerar Sub-OS') {
+    abrirSubOs(item)
+  }
+}
+
+async function confirmarAtualizacaoPrioridade() {
+  prioridadeConfirmDialog.value = false
+
+  if (prioridadeSelecionada.value === null || prioridadeSelecionada.value === undefined) {
+    mensagemRetorno.value = 'Selecione uma prioridade.'
+    sucesso.value = false
+    retorno.value = true
+    return
+  }
+
+  loadingAcao.value = true
+  try {
+    const resposta = await ordemServicoService.atualizarPrioridade({
+      ordemServicoId: currentItem.value.id,
+      prioridade: prioridadeSelecionada.value,
+    })
+
+    if (resposta?.statusCode !== 200) {
+      mensagemRetorno.value = resposta?.data?.message || 'Falha ao atualizar a prioridade.'
+      sucesso.value = false
+      retorno.value = true
+      return
+    }
+
+    prioridadeDialog.value = false
+    resetPrioridadeForm()
+    mensagemRetorno.value = 'Prioridade atualizada com sucesso.'
+    sucesso.value = true
+    retorno.value = true
+    emit('recarregarTabs')
+  } finally {
+    loadingAcao.value = false
   }
 }
 
@@ -836,7 +1047,7 @@ function alterarOrdenacao(evento) {
     />
 
     <!-- Filter Modal -->
-    <v-dialog v-model="modalFilter" max-width="600" persistent scrim="rgba(0,0,0,0.7)">
+    <v-dialog v-model="modalFilter" max-width="900" persistent scrim="rgba(0,0,0,0.7)">
       <v-card>
         <v-card-text class="pa-4">
           <div class="d-flex align-center mb-2">
@@ -847,30 +1058,144 @@ function alterarOrdenacao(evento) {
           </div>
           <v-divider />
           <v-form>
-            <v-container class="pa-3">
-              <v-row>
-                <v-col cols="12" class="pb-4">
-                  <v-text-field
-                    density="comfortable"
-                    v-model="filtrosLocal.numero"
-                    label="Nº O.S."
-                    clearable
-                    hide-details
-                    variant="outlined"
-                  />
-                </v-col>
-                <v-col cols="12">
-                  <v-text-field
-                    density="comfortable"
-                    v-model="filtrosLocal.todos"
-                    label="Busca geral"
-                    clearable
-                    hide-details
-                    variant="outlined"
-                  />
-                </v-col>
-              </v-row>
-            </v-container>
+            <div class="filtro-scroll-area">
+              <v-container class="pa-3">
+
+                <!-- Identificação -->
+                <div class="text-caption text-medium-emphasis text-uppercase mb-1 mt-2">Identificação</div>
+                <v-row dense>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.numero" label="Nº O.S." clearable hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.todos" label="Busca geral" clearable hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.nome" label="Nome do solicitante" clearable hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.numeroDocumento" label="Nº Documento" clearable hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.endereco" label="Endereço" clearable hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.bairro" label="Bairro" clearable hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.pontoReferencia" label="Ponto de referência" clearable hide-details variant="outlined" />
+                  </v-col>
+                </v-row>
+
+                <v-divider class="my-3" />
+
+                <!-- Serviços e Motivo -->
+                <div class="text-caption text-medium-emphasis text-uppercase mb-1">Serviços e Motivo</div>
+                <v-row dense>
+                  <v-col cols="12" sm="4">
+                    <v-autocomplete
+                      density="comfortable"
+                      v-model="filtrosLocal.servicoSolicitadoId"
+                      :items="listaServicosSolicitados"
+                      item-title="descricao"
+                      item-value="id"
+                      label="Serviços solicitados"
+                      clearable
+                      multiple
+                      chips
+                      closable-chips
+                      hide-details
+                      variant="outlined"
+                      no-data-text="Nenhum dado encontrado"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-autocomplete
+                      density="comfortable"
+                      v-model="filtrosLocal.servicoExecutadoId"
+                      :items="listaServicosExecutados"
+                      item-title="descricao"
+                      item-value="id"
+                      label="Serviços executados"
+                      clearable
+                      multiple
+                      chips
+                      closable-chips
+                      hide-details
+                      variant="outlined"
+                      no-data-text="Nenhum dado encontrado"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="4">
+                    <v-autocomplete
+                      density="comfortable"
+                      v-model="filtrosLocal.motivoCancelamentoId"
+                      :items="listaMotivosCancelamento"
+                      item-title="descricao"
+                      item-value="id"
+                      label="Motivo de cancelamento"
+                      clearable
+                      multiple
+                      chips
+                      closable-chips
+                      hide-details
+                      variant="outlined"
+                      no-data-text="Nenhum dado encontrado"
+                    />
+                  </v-col>
+                </v-row>
+
+                <v-divider class="my-3" />
+
+                <!-- Períodos -->
+                <div class="text-caption text-medium-emphasis text-uppercase mb-1">Períodos</div>
+                <v-row dense>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataSolicitacaoInicio" label="Solicitação — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataSolicitacaoFim" label="Solicitação — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataAgendamentoInicio" label="Agendamento — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataAgendamentoFim" label="Agendamento — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataDespachoInicio" label="Despacho — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataDespachoFim" label="Despacho — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataDespachoProgramadoInicio" label="Desp. programado — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataDespachoProgramadoFim" label="Desp. programado — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataFinalizacaoInicio" label="Finalização — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataFinalizacaoFim" label="Finalização — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataCancelamentoInicio" label="Cancelamento — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataCancelamentoFim" label="Cancelamento — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataParalisacaoInicio" label="Paralisação — início" type="date" hide-details variant="outlined" />
+                  </v-col>
+                  <v-col cols="12" sm="3">
+                    <v-text-field density="comfortable" v-model="filtrosLocal.dataParalisacaoFim" label="Paralisação — fim" type="date" hide-details variant="outlined" />
+                  </v-col>
+                </v-row>
+
+              </v-container>
+            </div>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -1166,11 +1491,125 @@ function alterarOrdenacao(evento) {
       </v-card>
     </v-dialog>
 
+    <!-- Modal Atualizar Prioridade -->
+    <v-dialog v-model="prioridadeDialog" max-width="450" persistent scrim="rgba(0,0,0,0.7)">
+      <v-card class="pa-2">
+        <v-card-title>
+          <font-awesome-icon icon="flag" class="text-primary me-2" />
+          <span class="text-h6">Atualizar prioridade</span>
+          <font-awesome-icon icon="xmark" @click="prioridadeDialog = false" class="text-close float-right icon-clicavel me-2" />
+        </v-card-title>
+        <v-divider class="pb-4" />
+        <v-card-text class="pb-4">
+          <div class="d-flex align-center mb-4">
+            <span class="text-body-2 text-medium-emphasis" style="min-width:80px">Nº O.S.:</span>
+            <strong>{{ currentItem.codigo }}</strong>
+          </div>
+          <v-select
+            v-model="prioridadeSelecionada"
+            :items="listaPrioridades"
+            item-title="descricao"
+            item-value="valor"
+            label="Prioridade"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+          >
+            <template #prepend-inner>
+              <font-awesome-icon icon="flag" class="text-medium-emphasis me-1" />
+            </template>
+          </v-select>
+        </v-card-text>
+        <v-divider class="pb-4" />
+        <v-card-actions class="justify-end">
+          <BaseButton label="Cancelar" type="cancel" extraClass="me-2" @click="prioridadeDialog = false" />
+          <BaseButton label="Atualizar" type="save" :disabled="prioridadeSelecionada === null || prioridadeSelecionada === undefined" @click="prioridadeConfirmDialog = true" />
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal Confirmar Atualização de Prioridade -->
+    <v-dialog v-model="prioridadeConfirmDialog" max-width="450" persistent scrim="rgba(0,0,0,0.7)">
+      <v-card class="pa-2">
+        <v-card-title>
+          <font-awesome-icon icon="flag" class="text-primary me-4" />
+          <span class="text-h6">Confirmar atualização?</span>
+          <font-awesome-icon icon="xmark" @click="prioridadeConfirmDialog = false" class="text-close float-right icon-clicavel me-2" />
+        </v-card-title>
+        <v-divider class="pb-4" />
+        <v-card-text class="pb-4">
+          <p>
+            Deseja realmente atualizar a prioridade da O.S. <strong>{{ currentItem.codigo }}</strong> para
+            <strong>{{ listaPrioridades.find(p => p.valor === prioridadeSelecionada)?.descricao }}</strong>?
+          </p>
+        </v-card-text>
+        <v-divider class="pb-4" />
+        <v-card-actions class="justify-end">
+          <BaseButton label="Não" type="cancel" extraClass="me-2" @click="prioridadeConfirmDialog = false" />
+          <BaseButton label="Sim, atualizar" type="confirm" @click="confirmarAtualizacaoPrioridade" />
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <OrdemServicoDocumentos
       v-model="documentosDialog"
       :ordemServico="ordemServicoDocumentosAtual"
       @update:modelValue="valor => { if (!valor) { documentosDialog = false; ordemServicoDocumentosAtual = null } }"
     />
+
+    <!-- Confirmação: Gerar Sub-OS -->
+    <v-dialog v-model="subOsConfirmDialog" max-width="520" persistent scrim="rgba(0,0,0,0.7)">
+      <v-card class="pa-2">
+        <v-card-title class="d-flex align-center pa-4 pb-2">
+          <font-awesome-icon icon="plus" class="text-primary me-2" />
+          <span class="text-h6">Gerar Sub-OS</span>
+          <v-spacer />
+          <font-awesome-icon icon="xmark" class="cursor-pointer" @click="subOsConfirmDialog = false" />
+        </v-card-title>
+        <v-divider />
+        <v-card-text class="pa-4">
+          <v-alert type="info" variant="tonal" class="mb-4">
+            <template v-if="subOsEIrmao">
+              Você selecionou uma <strong>Sub-OS</strong> ({{ subOsConfirmItem?.codigo }}).
+              A nova Sub-OS será criada como <strong>irmã</strong>, vinculada à OS pai
+              <strong>{{ codigoPaiDoItem(subOsConfirmItem) }}</strong> — e não como filha desta sub-OS.
+            </template>
+            <template v-else>
+              Será criada uma nova <strong>Sub-OS</strong> vinculada à O.S.
+              <strong>{{ subOsConfirmItem?.codigo }}</strong>.
+            </template>
+          </v-alert>
+          <p class="text-body-2 text-medium-emphasis">Deseja continuar?</p>
+        </v-card-text>
+        <v-divider />
+        <v-card-actions class="pa-4 justify-end">
+          <BaseButton label="Cancelar" type="cancel" extraClass="me-2" @click="subOsConfirmDialog = false" />
+          <BaseButton label="Sim, gerar Sub-OS" type="confirm" @click="confirmarGerarSubOs" />
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog Sub-OS -->
+    <v-dialog v-model="subOsDialog" fullscreen persistent scrim="rgba(0,0,0,0.7)">
+      <v-card rounded="0">
+        <v-toolbar density="comfortable" color="white" elevation="1">
+          <v-toolbar-title>
+            <font-awesome-icon icon="plus" class="text-primary me-2" />
+            Criar Sub-OS: {{ subOsProtocolo }}
+          </v-toolbar-title>
+          <v-spacer />
+          <font-awesome-icon icon="xmark" class="text-black cursor-pointer mr-4" @click="fecharSubOs" />
+        </v-toolbar>
+        <v-divider />
+        <NovaOrdemServico
+          v-if="subOsDialog && subOsOrdemServicoId"
+          :ordemServicoPaiId="subOsOrdemServicoId"
+          :modoSubOS="true"
+          @fechar="fecharSubOs"
+          @salvo="handleSubOSSalva"
+        />
+      </v-card>
+    </v-dialog>
 
     <Snackbar
       :retorno="retorno"
@@ -1183,6 +1622,10 @@ function alterarOrdenacao(evento) {
 </template>
 
 <style scoped>
+.filtro-scroll-area {
+  max-height: 65vh;
+  overflow-y: auto;
+}
 
 :deep(.v-overlay__scrim) {
   background: rgba(0, 0, 0, 0.7) !important;

@@ -10,6 +10,27 @@ import EstacaoService from "@/services/configuracoes/estacao-service.js"
 import EquipamentoService from "@/services/configuracoes/equipamento-service.js"
 import Snackbar from '@/components/base/Snackbar.vue'
 
+const props = defineProps({
+  ordemServicoPaiId: {
+    type: String,
+    default: null,
+  },
+  modoSubOS: {
+    type: Boolean,
+    default: false,
+  },
+  modoEdicao: {
+    type: Boolean,
+    default: false,
+  },
+  dadosIniciais: {
+    type: Object,
+    default: null,
+  },
+})
+
+const emit = defineEmits(['fechar', 'salvo'])
+
 const endpoint = inject('endpoint')
 const headerPadrao = inject('headerPadrao')
 const chaveSeguranca = inject('chaveSeguranca')
@@ -23,6 +44,7 @@ const equipamentoService = new EquipamentoService(endpoint, headerPadrao, chaveS
 
 const step = ref(1)
 const loading = ref(false)
+const preenchendoEdicao = ref(false)
 
 const retorno = ref(false)
 const mensagemRetorno = ref(null)
@@ -66,10 +88,35 @@ async function listarEstacoes() {
 
   if (result?.statusCode === 200) {
     estacoesOptions.value = result?.data?.data || []
+    if (props.modoEdicao && props.dadosIniciais) {
+      preencherDadosEdicao()
+    }
   } else {
     mensagemRetorno.value = result?.data?.message || 'Falha ao listar estações.'
     sucesso.value = false
     retorno.value = true
+  }
+}
+
+function preencherDadosEdicao() {
+  if (!props.modoEdicao || !props.dadosIniciais) return
+
+  preenchendoEdicao.value = true
+
+  Object.assign(claimant, {
+    name: props.dadosIniciais.nome || '',
+    phone: (props.dadosIniciais.telefone || '').replace(/^\+55/, ''),
+    cpf: props.dadosIniciais.numeroDocumento || '',
+    email: props.dadosIniciais.email || '',
+  })
+
+  observacoes.value = props.dadosIniciais.observacao || ''
+
+  const estacao = estacoesOptions.value.find(e => e.id === props.dadosIniciais.estacaoId)
+  if (estacao) {
+    estacaoSelecionada.value = estacao
+  } else {
+    preenchendoEdicao.value = false
   }
 }
 
@@ -99,6 +146,11 @@ async function listarServicosSolicitados() {
 
   if (result?.statusCode === 200) {
     servicosOptions.value = result?.data?.data || []
+    if (props.modoEdicao && props.dadosIniciais?.servicosSolicitados) {
+      servicosSelecionados.value = servicosOptions.value.filter(s =>
+        (props.dadosIniciais.servicosSolicitados || []).some(ss => ss.id === s.id)
+      )
+    }
   } else {
     mensagemRetorno.value = result?.data?.message || 'Falha ao listar serviços solicitados.'
     sucesso.value = false
@@ -166,7 +218,9 @@ function generateMapMarkersFromEstacao() {
 }
 
 watch(estacaoSelecionada, async (nova) => {
-  equipamentosSelecionados.value = []
+  if (!preenchendoEdicao.value) {
+    equipamentosSelecionados.value = []
+  }
   equipamentosOptions.value = []
 
   Object.assign(estacaoEndereco, {
@@ -183,6 +237,15 @@ watch(estacaoSelecionada, async (nova) => {
 
   if (nova?.id) {
     await listarEquipamentosPorEstacao(nova.id)
+
+    if (preenchendoEdicao.value && props.dadosIniciais?.equipamentos) {
+      equipamentosSelecionados.value = equipamentosOptions.value.filter(e =>
+        (props.dadosIniciais.equipamentos || []).some(de => de.id === e.id)
+      )
+      preenchendoEdicao.value = false
+    }
+  } else {
+    preenchendoEdicao.value = false
   }
 })
 
@@ -359,9 +422,20 @@ function resetStep4() {
 }
 
 /**
- * Salvar OS
+ * Salvar / Atualizar OS
  */
+function finalizarFluxoSubOS() {
+  if (!props.modoSubOS) return
+  emit('salvo')
+  emit('fechar')
+}
+
 async function salvar() {
+  if (props.modoEdicao) {
+    await atualizar()
+    return
+  }
+
   const payload = {
     EstacaoId: estacaoSelecionada.value?.id,
 
@@ -378,7 +452,8 @@ async function salvar() {
     telefone: buildTelefoneE164BR(claimant.phone),
     numeroDocumento: claimant.cpf,
     email: claimant.email,
-    observacao: observacoes.value
+    observacao: observacoes.value,
+    ordemServicoPaiId: props.modoSubOS ? props.ordemServicoPaiId : null,
   }
 
   loading.value = true
@@ -400,6 +475,61 @@ async function salvar() {
     retorno.value = true
   }
 }
+
+async function atualizar() {
+  const payload = {
+    id: props.dadosIniciais.id,
+    codigo: props.dadosIniciais.codigo,
+    numero: props.dadosIniciais.numero,
+    subOS: props.dadosIniciais.subOS,
+    ano: props.dadosIniciais.ano,
+    statusId: props.dadosIniciais.statusId,
+    dataSolicitacao: props.dadosIniciais.dataSolicitacao,
+    ordemServicoPaiId: props.dadosIniciais.ordemServicoPaiId,
+    tipoOS: props.dadosIniciais.tipoOS,
+    prioridade: props.dadosIniciais.prioridade,
+
+    EstacaoId: estacaoSelecionada.value?.id,
+
+    Equipamentos: (equipamentosSelecionados.value || []).map(e => ({
+      OrdemServicoId: props.dadosIniciais.id,
+      EquipamentoId: e.id
+    })),
+
+    servicosSolicitados: (servicosSelecionados.value || []).map(s => ({
+      servicoSolicitadoId: s.id
+    })),
+
+    nome: claimant.name,
+    telefone: buildTelefoneE164BR(claimant.phone),
+    numeroDocumento: claimant.cpf,
+    email: claimant.email,
+    observacao: observacoes.value,
+  }
+
+  loading.value = true
+  const result = await ordemServicoService.atualizarOrdemServico(payload)
+  loading.value = false
+
+  if (result?.statusCode === 200) {
+    confirmationNumber.value = props.dadosIniciais.codigo || ''
+    showConfirmationDialog.value = true
+  } else {
+    mensagemRetorno.value = result?.data?.message || 'Falha ao atualizar Ordem de Serviço.'
+    sucesso.value = false
+    retorno.value = true
+  }
+}
+
+watch(showConfirmationDialog, (aberto, abertoAnterior) => {
+  if (props.modoSubOS && abertoAnterior === true && aberto === false && confirmationNumber.value) {
+    finalizarFluxoSubOS()
+  }
+  if (props.modoEdicao && abertoAnterior === true && aberto === false && confirmationNumber.value) {
+    emit('salvo')
+    emit('fechar')
+  }
+})
 
 listarEstacoes()
 listarServicosSolicitados()
@@ -760,13 +890,13 @@ listarServicosSolicitados()
           <v-card-title>
             <div class="d-flex align-center pb-2">
               <font-awesome-icon icon="clipboard-check" class="text-primary me-2" />
-              <span class="text-h6">Ordem de Serviço Registrada</span>
+              <span class="text-h6">{{ modoEdicao ? 'Ordem de Serviço Atualizada' : 'Ordem de Serviço Registrada' }}</span>
               <font-awesome-icon icon="xmark" @click="showConfirmationDialog = false" class="text-close float-right icon-clicavel ms-auto" title="Fechar" />
             </div>
           </v-card-title>
           <v-divider class="pb-4" />
           <v-card-text class="pb-4">
-            <p>OS registrada com sucesso!</p>
+            <p>{{ modoEdicao ? 'OS atualizada com sucesso!' : 'OS registrada com sucesso!' }}</p>
             <p><strong>Protocolo:</strong> {{ confirmationNumber }}</p>
           </v-card-text>
         </v-card>

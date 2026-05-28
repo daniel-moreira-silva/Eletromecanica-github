@@ -7,6 +7,7 @@ public class OrdemServicoDto
     public int? Numero { get; set; }
     public int? SubOS { get; set; }
     public int? Ano { get; set; }
+    public Guid? OrdemServicoPaiId { get; set; }
     public Guid EstacaoId { get; set; }
     public Estacao? Estacao { get; set; } = default!;
     public Guid? AgendamentoId { get; set; }
@@ -31,7 +32,6 @@ public class OrdemServicoDto
     public DateTime? DataParalisacao { get; set; }
     public DateTime DataSolicitacao { get; set; }
     public DateTime? DataInicioExecucao { get; set; }
-    public DateTime? DataPrevista { get; set; }
     public decimal? CustoTotal { get; set; }
     public string? Observacao { get; set; }
     public bool IsAgendada { get; set; }
@@ -48,6 +48,7 @@ public class OrdemServicoDto
             Numero = ordemServico.Numero,
             SubOS = ordemServico.SubOS,
             Ano = ordemServico.Ano,
+            OrdemServicoPaiId = ordemServico.OrdemServicoPaiId,
             EstacaoId = ordemServico.EstacaoId,
             AgendamentoId = ordemServico.AgendamentoId,
             Agendamento = ordemServico.Agendamento,
@@ -71,7 +72,6 @@ public class OrdemServicoDto
             DataParalisacao = ordemServico.DataParalisacao,
             DataSolicitacao = ordemServico.DataSolicitacao,
             DataInicioExecucao = ordemServico.DataInicioExecucao,
-            DataPrevista = ordemServico.DataPrevista,
             CustoTotal = ordemServico.CustoTotal,
             Observacao = ordemServico.Observacao,
             IsAgendada = ordemServico.IsAgendada

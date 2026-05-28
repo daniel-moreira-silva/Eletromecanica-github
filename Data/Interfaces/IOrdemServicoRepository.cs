@@ -8,6 +8,8 @@ public interface IOrdemServicoRepository
     Task<ListaPaginada<OrdemServicoList>> PaginatedGetAsync(OrdemServicoFilter filter, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<bool> UpdateStatusAsync(Guid id, Guid statusId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<int> GetNextNumberOSAynsc(IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<int> GetNextSubOSAsync(int numero, int ano, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OrdemServicoList>> GetSubOsListAsync(int numero, int ano, Guid excludeId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<OrdemServico>> GetByAddressAsync(string busca, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<OrdemServico>> GetOrdemServicoNearByAsync(string lat, string lon, decimal raioKm, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<OrdemServico>> GetAllByEquipamentoIdAndDateAsync(Guid id, DateTime date, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
@@ -19,4 +21,7 @@ public interface IOrdemServicoRepository
     Task<bool> IniciarOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<bool> DespacharOrdemServicoAsync(Guid ordemServicoId, Guid funcionarioId, DateTime dataDespachoProgramado, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<bool> DevolverOrdemServicoAsync(Guid ordemServicoId, string observacaoDevolucao, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<bool> AtualizarPrioridadeAsync(Guid ordemServicoId, EPrioridade prioridade, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task DeleteServicosSolicitadosByOrdemServicoAsync(Guid ordemServicoId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task DeleteEquipamentosByOrdemServicoAsync(Guid ordemServicoId, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
 }
